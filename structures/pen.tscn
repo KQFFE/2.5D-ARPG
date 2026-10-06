@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://structures/fence.tscn" id="1_fence"]
+
+[node name="Pen" type="Node3D"]
+
+[node name="FenceNorth" parent="." instance=ExtResource("1_fence")]
+position = Vector3(-2.5, 0, -5)
+
+[node name="FenceSouthA" parent="." instance=ExtResource("1_fence")]
+position = Vector3(-2.5, 0, 5)
+
+[node name="FenceSouthB" parent="." instance=ExtResource("1_fence")]
+position = Vector3(2.5, 0, 5)
+
+[node name="FenceWestA" parent="." instance=ExtResource("1_fence")]
+position = Vector3(-5, 0, -2.5)
+rotation = Vector3(0, 1.570796, 0)
+
+[node name="FenceWestB" parent="." instance=ExtResource("1_fence")]
+position = Vector3(-5, 0, 2.5)
+rotation = Vector3(0, 1.570796, 0)
+
+[node name="FenceEastA" parent="." instance=ExtResource("1_fence")]
+position = Vector3(5, 0, -2.5)
+rotation = Vector3(0, 1.570796, 0)
+
+[node name="FenceEastB" parent="." instance=ExtResource("1_fence")]
+position = Vector3(5, 0, 2.5)
+rotation = Vector3(0, 1.570796, 0)

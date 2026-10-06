@@ -1,0 +1,79 @@
+[gd_scene format=3 uid="uid://bco2m2jl6rbyg"]
+
+[ext_resource type="Script" uid="uid://dbimhniohtl5f" path="res://ui/settings_screen.gd" id="1_settings"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_panel"]
+content_margin_left = 22.0
+content_margin_top = 20.0
+content_margin_right = 22.0
+content_margin_bottom = 20.0
+bg_color = Color(0.07, 0.08, 0.11, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.72, 0.63, 0.42, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="SettingsScreen" type="CanvasLayer" unique_id=2070604295]
+layer = 10
+visible = false
+script = ExtResource("1_settings")
+
+[node name="Root" type="Control" parent="." unique_id=25934095]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="Root" unique_id=1060102985]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="Center" type="CenterContainer" parent="Root" unique_id=580801688]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Root/Center" unique_id=74090982]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBox_panel")
+
+[node name="Content" type="VBoxContainer" parent="Root/Center/Panel" unique_id=296135737]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Root/Center/Panel/Content" unique_id=1263107234]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Input Bindings"
+horizontal_alignment = 1
+
+[node name="PromptLabel" type="Label" parent="Root/Center/Panel/Content" unique_id=1651329021]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(430, 36)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.82, 0.7, 1)
+autowrap_mode = 2
+
+[node name="RowList" type="VBoxContainer" parent="Root/Center/Panel/Content" unique_id=486332142]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CloseButton" type="Button" parent="Root/Center/Panel/Content" unique_id=1600007714]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Close"

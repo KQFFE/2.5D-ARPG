@@ -1,0 +1,65 @@
+[gd_scene format=3 uid="uid://jiucwyty56bv"]
+
+[ext_resource type="Script" uid="uid://bt7ce3ox2okv4" path="res://entities/monsters/goblin.gd" id="1_goblin"]
+[ext_resource type="Script" uid="uid://ch2x2ephuq0k5" path="res://scripts/health.gd" id="2_imi2i"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
+albedo_color = Color(0.44, 0.56, 0.32, 1)
+roughness = 0.9
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
+radius = 0.3
+height = 1.1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_head"]
+albedo_color = Color(0.52, 0.62, 0.36, 1)
+roughness = 0.9
+
+[sub_resource type="SphereMesh" id="SphereMesh_head"]
+radius = 0.22
+height = 0.44
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_snout"]
+albedo_color = Color(0.34, 0.22, 0.16, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_snout"]
+size = Vector3(0.12, 0.12, 0.24)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_goblin"]
+radius = 0.3
+height = 1.1
+
+[node name="Goblin" type="CharacterBody3D" unique_id=1929295271]
+motion_mode = 1
+script = ExtResource("1_goblin")
+swing_damage = 1.0
+speed = 0.9
+wander_radius = 6.0
+pause_min = 0.8
+pause_max = 2.2
+
+[node name="Visual" type="Node3D" parent="." unique_id=1885326200]
+
+[node name="Body" type="MeshInstance3D" parent="Visual" unique_id=1838430966]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+material_override = SubResource("StandardMaterial3D_body")
+mesh = SubResource("CapsuleMesh_body")
+
+[node name="Head" type="MeshInstance3D" parent="Visual" unique_id=2022655029]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02, 0)
+material_override = SubResource("StandardMaterial3D_head")
+mesh = SubResource("SphereMesh_head")
+
+[node name="Snout" type="MeshInstance3D" parent="Visual" unique_id=934803552]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.98, -0.24)
+material_override = SubResource("StandardMaterial3D_snout")
+mesh = SubResource("BoxMesh_snout")
+
+[node name="Collision" type="CollisionShape3D" parent="." unique_id=163232560]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+shape = SubResource("CapsuleShape3D_goblin")
+
+[node name="Health" type="Node" parent="." unique_id=1518812286]
+script = ExtResource("2_imi2i")
+max_health = 30.0

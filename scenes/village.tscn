@@ -1,0 +1,385 @@
+[gd_scene format=3 uid="uid://dq76cy2hu0gmm"]
+
+[ext_resource type="PackedScene" uid="uid://be1gfrx0jghvn" path="res://entities/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://entities/npcs/npc.tscn" id="2_npc"]
+[ext_resource type="PackedScene" path="res://entities/npcs/villager.tscn" id="3_villager"]
+[ext_resource type="PackedScene" path="res://entities/animals/sheep.tscn" id="4_sheep"]
+[ext_resource type="PackedScene" uid="uid://jiucwyty56bv" path="res://entities/monsters/goblin.tscn" id="5_goblin"]
+[ext_resource type="PackedScene" path="res://entities/props/herb.tscn" id="6_herb"]
+[ext_resource type="PackedScene" path="res://structures/cottage.tscn" id="7_cottage"]
+[ext_resource type="PackedScene" path="res://structures/fence.tscn" id="8_fence"]
+[ext_resource type="PackedScene" path="res://structures/gate.tscn" id="9_gate"]
+[ext_resource type="PackedScene" path="res://structures/pen.tscn" id="10_pen"]
+[ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="11_ui"]
+[ext_resource type="PackedScene" uid="uid://b2n757t3ggmeo" path="res://assets/library/rpg-fantasy-lowpoly/barrel.glb" id="12_barrel"]
+[ext_resource type="PackedScene" uid="uid://85i6wrbejm38" path="res://assets/library/rpg-fantasy-lowpoly/barrels.glb" id="13_barrels"]
+[ext_resource type="PackedScene" uid="uid://dj5lme3aep18x" path="res://assets/library/rpg-fantasy-lowpoly/bench.glb" id="14_bench"]
+[ext_resource type="PackedScene" uid="uid://bgu1gd3ird45q" path="res://assets/library/rpg-fantasy-lowpoly/cart.glb" id="15_cart"]
+[ext_resource type="PackedScene" uid="uid://bb1eauqqmjevx" path="res://assets/library/rpg-fantasy-lowpoly/stall-cart-empty.glb" id="16_stall"]
+[ext_resource type="PackedScene" uid="uid://wcy3duvn634n" path="res://assets/library/rpg-fantasy-lowpoly/banner-1.glb" id="17_banner"]
+[ext_resource type="PackedScene" uid="uid://bc7ebfbitlt7e" path="res://assets/library/rpg-fantasy-lowpoly/chest-closed.glb" id="18_chest"]
+[ext_resource type="PackedScene" uid="uid://cn17528pf64o0" path="res://assets/library/rpg-fantasy-lowpoly/anvil.glb" id="19_anvil"]
+[ext_resource type="Script" uid="uid://cust64sb6anh4" path="res://scripts/occluder_fader.gd" id="20_fader"]
+[ext_resource type="PackedScene" path="res://structures/lamppost.tscn" id="21_lamppost"]
+[ext_resource type="Script" uid="uid://ckqyiucaqrf2" path="res://scripts/checkpoint_manager.gd" id="21_v3dlt"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_village"]
+sky_top_color = Color(0.42, 0.56, 0.76, 1)
+sky_horizon_color = Color(0.88, 0.79, 0.64, 1)
+ground_bottom_color = Color(0.28, 0.3, 0.24, 1)
+ground_horizon_color = Color(0.74, 0.68, 0.56, 1)
+
+[sub_resource type="Sky" id="Sky_village"]
+sky_material = SubResource("ProceduralSkyMaterial_village")
+
+[sub_resource type="Environment" id="Environment_village"]
+background_mode = 2
+sky = SubResource("Sky_village")
+ambient_light_source = 2
+ambient_light_color = Color(0.76, 0.72, 0.66, 1)
+ambient_light_energy = 0.45
+tonemap_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_grass"]
+albedo_color = Color(0.42, 0.56, 0.32, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(180, 0.5, 180)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(180, 0.5, 180)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lane"]
+albedo_color = Color(0.62, 0.54, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_lane"]
+size = Vector3(52, 0.04, 4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_field"]
+albedo_color = Color(0.36, 0.5, 0.28, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_field"]
+size = Vector3(50, 0.02, 50)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cart"]
+size = Vector3(1.4, 1.9, 2.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_stall"]
+size = Vector3(3.2, 2.6, 1.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ogrjq"]
+size = Vector3(0.8, 1.24, 1.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mu7p8"]
+size = Vector3(0.75, 0.9, 0.75)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_v3dlt"]
+size = Vector3(0.75, 0.9, 0.75)
+
+[node name="Village" type="Node3D" unique_id=1443289540]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=563806315]
+environment = SubResource("Environment_village")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=862699957]
+transform = Transform3D(0.86602527, -0.43301305, 0.2499999, 0, 0.49999955, 0.8660257, -0.50000024, -0.7500001, 0.43301225, 0, 0, 0)
+light_color = Color(1, 0.92, 0.78, 1)
+light_energy = 1.15
+shadow_enabled = true
+shadow_bias = 0.04
+shadow_normal_bias = 2.5
+directional_shadow_blend_splits = true
+directional_shadow_max_distance = 70.0
+
+[node name="OccluderFader" type="Node3D" parent="." unique_id=152905800]
+script = ExtResource("20_fader")
+player_path = NodePath("../Actors/Player")
+fade_objects = Array[NodePath]([NodePath("../Structures/Cottage1"), NodePath("../Structures/Cottage2"), NodePath("../Structures/Cottage3"), NodePath("../Structures/Cottage4"), NodePath("../Structures/Cottage5"), NodePath("../Structures/Gate")])
+screen_radius = 0.36
+min_alpha = 0.12
+behind_margin = 0.0
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=1480374456]
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground" unique_id=416297891]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+material_override = SubResource("StandardMaterial3D_grass")
+mesh = SubResource("BoxMesh_ground")
+
+[node name="Collision" type="CollisionShape3D" parent="Ground" unique_id=1767635649]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+shape = SubResource("BoxShape3D_ground")
+
+[node name="Lane" type="MeshInstance3D" parent="." unique_id=48190397]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.02, 0)
+material_override = SubResource("StandardMaterial3D_lane")
+mesh = SubResource("BoxMesh_lane")
+
+[node name="Fields" type="MeshInstance3D" parent="." unique_id=2090960726]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55, 0.011, 0)
+material_override = SubResource("StandardMaterial3D_field")
+mesh = SubResource("BoxMesh_field")
+
+[node name="Structures" type="Node3D" parent="." unique_id=1248566453]
+
+[node name="Cottage1" parent="Structures" unique_id=1092897304 instance=ExtResource("7_cottage")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -9)
+
+[node name="Cottage2" parent="Structures" unique_id=453867093 instance=ExtResource("7_cottage")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -11)
+
+[node name="Cottage3" parent="Structures" unique_id=597846622 instance=ExtResource("7_cottage")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -9)
+
+[node name="Cottage4" parent="Structures" unique_id=1443188431 instance=ExtResource("7_cottage")]
+transform = Transform3D(-1, 0, -3.2584137e-07, 0, 1, 0, 3.2584137e-07, 0, -1, -14, 0, 13)
+
+[node name="Cottage5" parent="Structures" unique_id=973132979 instance=ExtResource("7_cottage")]
+transform = Transform3D(-1, 0, -3.2584137e-07, 0, 1, 0, 3.2584137e-07, 0, -1, 6, 0, 12)
+
+[node name="Gate" parent="Structures" unique_id=794320177 instance=ExtResource("9_gate")]
+transform = Transform3D(3.1391647e-07, 0, 1, 0, 1, 0, -1, 0, 3.1391647e-07, 26, 0, 0)
+
+[node name="Pen" parent="Structures" unique_id=2037200574 instance=ExtResource("10_pen")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 0, 12)
+
+[node name="FenceN01" parent="Structures" unique_id=690814437 instance=ExtResource("8_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.5, 0, -20)
+
+[node name="FenceN02" parent="Structures" unique_id=647923457 instance=ExtResource("8_fence")]
+transform = Transform3D(0.9998, 0, 0.019998666, 0, 1, 0, -0.019998666, 0, 0.9998, -26.5, 0, -20)
+
+[node name="FenceN03" parent="Structures" unique_id=964502187 instance=ExtResource("8_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.5, 0, -20)
+
+[node name="FenceN04" parent="Structures" unique_id=2071524859 instance=ExtResource("8_fence")]
+transform = Transform3D(0.9998, 0, -0.019998666, 0, 1, 0, 0.019998666, 0, 0.9998, -16.5, 0, -20)
+
+[node name="FenceN05" parent="Structures" unique_id=468306424 instance=ExtResource("8_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 0, -20)
+
+[node name="FenceN06" parent="Structures" unique_id=1470783218 instance=ExtResource("8_fence")]
+transform = Transform3D(0.9998, 0, 0.019998666, 0, 1, 0, -0.019998666, 0, 0.9998, -6.5, 0, -20)
+
+[node name="FenceN07" parent="Structures" unique_id=1715470428 instance=ExtResource("8_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, -20)
+
+[node name="FenceN08" parent="Structures" unique_id=2139944162 instance=ExtResource("8_fence")]
+transform = Transform3D(0.9998, 0, -0.019998666, 0, 1, 0, 0.019998666, 0, 0.9998, 3.5, 0, -20)
+
+[node name="FenceN09" parent="Structures" unique_id=1670153540 instance=ExtResource("8_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0, -20)
+
+[node name="FenceN10" parent="Structures" unique_id=142589767 instance=ExtResource("8_fence")]
+transform = Transform3D(0.9998, 0, 0.019998666, 0, 1, 0, -0.019998666, 0, 0.9998, 13.5, 0, -20)
+
+[node name="FenceN11" parent="Structures" unique_id=1585121927 instance=ExtResource("8_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.5, 0, -20)
+
+[node name="FenceN12" parent="Structures" unique_id=1643756148 instance=ExtResource("8_fence")]
+transform = Transform3D(0.9998, 0, -0.019998666, 0, 1, 0, 0.019998666, 0, 0.9998, 23.5, 0, -20)
+
+[node name="FenceS01" parent="Structures" unique_id=1159546948 instance=ExtResource("8_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.5, 0, 20)
+
+[node name="FenceS02" parent="Structures" unique_id=1581442999 instance=ExtResource("8_fence")]
+transform = Transform3D(0.9998, 0, -0.019998666, 0, 1, 0, 0.019998666, 0, 0.9998, -26.5, 0, 20)
+
+[node name="FenceS03" parent="Structures" unique_id=1613144303 instance=ExtResource("8_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.5, 0, 20)
+
+[node name="FenceS04" parent="Structures" unique_id=719467999 instance=ExtResource("8_fence")]
+transform = Transform3D(0.9998, 0, 0.019998666, 0, 1, 0, -0.019998666, 0, 0.9998, -16.5, 0, 20)
+
+[node name="FenceS05" parent="Structures" unique_id=1984701117 instance=ExtResource("8_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 0, 20)
+
+[node name="FenceS06" parent="Structures" unique_id=393359533 instance=ExtResource("8_fence")]
+transform = Transform3D(0.9998, 0, -0.019998666, 0, 1, 0, 0.019998666, 0, 0.9998, -6.5, 0, 20)
+
+[node name="FenceS07" parent="Structures" unique_id=2017511592 instance=ExtResource("8_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 20)
+
+[node name="FenceS08" parent="Structures" unique_id=1561451476 instance=ExtResource("8_fence")]
+transform = Transform3D(0.9998, 0, 0.019998666, 0, 1, 0, -0.019998666, 0, 0.9998, 3.5, 0, 20)
+
+[node name="FenceS09" parent="Structures" unique_id=327258495 instance=ExtResource("8_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0, 20)
+
+[node name="FenceS10" parent="Structures" unique_id=268374836 instance=ExtResource("8_fence")]
+transform = Transform3D(0.9998, 0, -0.019998666, 0, 1, 0, 0.019998666, 0, 0.9998, 13.5, 0, 20)
+
+[node name="FenceS11" parent="Structures" unique_id=1582510267 instance=ExtResource("8_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.5, 0, 20)
+
+[node name="FenceS12" parent="Structures" unique_id=1199968852 instance=ExtResource("8_fence")]
+transform = Transform3D(0.9998, 0, 0.019998666, 0, 1, 0, -0.019998666, 0, 0.9998, 23.5, 0, 20)
+
+[node name="FenceW01" parent="Structures" unique_id=1821489947 instance=ExtResource("8_fence")]
+transform = Transform3D(3.1391647e-07, 0, 1, 0, 1, 0, -1, 0, 3.1391647e-07, -34, 0, -17.5)
+
+[node name="FenceW02" parent="Structures" unique_id=767081939 instance=ExtResource("8_fence")]
+transform = Transform3D(0.019998962, 0, 0.9998, 0, 1, 0, -0.9998, 0, 0.019998962, -34, 0, -12.5)
+
+[node name="FenceW03" parent="Structures" unique_id=1119432571 instance=ExtResource("8_fence")]
+transform = Transform3D(3.1391647e-07, 0, 1, 0, 1, 0, -1, 0, 3.1391647e-07, -34, 0, -7.5)
+
+[node name="FenceW04" parent="Structures" unique_id=1639028636 instance=ExtResource("8_fence")]
+transform = Transform3D(-0.019998334, 0, 0.9998, 0, 1, 0, -0.9998, 0, -0.019998334, -34, 0, -2.5)
+
+[node name="FenceW05" parent="Structures" unique_id=766828014 instance=ExtResource("8_fence")]
+transform = Transform3D(3.1391647e-07, 0, 1, 0, 1, 0, -1, 0, 3.1391647e-07, -34, 0, 2.5)
+
+[node name="FenceW06" parent="Structures" unique_id=19242223 instance=ExtResource("8_fence")]
+transform = Transform3D(0.019998962, 0, 0.9998, 0, 1, 0, -0.9998, 0, 0.019998962, -34, 0, 7.5)
+
+[node name="FenceW07" parent="Structures" unique_id=853165200 instance=ExtResource("8_fence")]
+transform = Transform3D(3.1391647e-07, 0, 1, 0, 1, 0, -1, 0, 3.1391647e-07, -34, 0, 12.5)
+
+[node name="FenceW08" parent="Structures" unique_id=909398922 instance=ExtResource("8_fence")]
+transform = Transform3D(-0.019998334, 0, 0.9998, 0, 1, 0, -0.9998, 0, -0.019998334, -34, 0, 17.5)
+
+[node name="FenceE01" parent="Structures" unique_id=2089690801 instance=ExtResource("8_fence")]
+transform = Transform3D(3.1391647e-07, 0, 1, 0, 1, 0, -1, 0, 3.1391647e-07, 26, 0, -17.5)
+
+[node name="FenceE02" parent="Structures" unique_id=1608613704 instance=ExtResource("8_fence")]
+transform = Transform3D(0.019998962, 0, 0.9998, 0, 1, 0, -0.9998, 0, 0.019998962, 26, 0, -12.5)
+
+[node name="FenceE03" parent="Structures" unique_id=453605476 instance=ExtResource("8_fence")]
+transform = Transform3D(3.1391647e-07, 0, 1, 0, 1, 0, -1, 0, 3.1391647e-07, 26, 0, -7.5)
+
+[node name="FenceE04" parent="Structures" unique_id=1443933869 instance=ExtResource("8_fence")]
+transform = Transform3D(-0.019998334, 0, 0.9998, 0, 1, 0, -0.9998, 0, -0.019998334, 26, 0, 7.5)
+
+[node name="FenceE05" parent="Structures" unique_id=815313514 instance=ExtResource("8_fence")]
+transform = Transform3D(3.1391647e-07, 0, 1, 0, 1, 0, -1, 0, 3.1391647e-07, 26, 0, 12.5)
+
+[node name="FenceE06" parent="Structures" unique_id=801544432 instance=ExtResource("8_fence")]
+transform = Transform3D(0.019998962, 0, 0.9998, 0, 1, 0, -0.9998, 0, 0.019998962, 26, 0, 17.5)
+
+[node name="Dressing" type="Node3D" parent="." unique_id=1675785704]
+
+[node name="BarrelA" parent="Dressing" unique_id=363127888 instance=ExtResource("12_barrel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.2, 0, -6.4)
+
+[node name="BarrelB" parent="Dressing" unique_id=1043802946 instance=ExtResource("12_barrel")]
+transform = Transform3D(0.7648422, 0, 0.64421767, 0, 1, 0, -0.64421767, 0, 0.7648422, -5.4, 0, -6.9)
+
+[node name="BarrelsByPen" parent="Dressing" unique_id=769746879 instance=ExtResource("13_barrels")]
+transform = Transform3D(3.1391647e-07, 0, 1, 0, 1, 0, -1, 0, 3.1391647e-07, -19.2, 0, 9)
+
+[node name="Bench" parent="Dressing" unique_id=1084133574 instance=ExtResource("14_bench")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0, -6.6)
+
+[node name="Anvil" parent="Dressing" unique_id=479645292 instance=ExtResource("19_anvil")]
+transform = Transform3D(0.921061, 0, 0.38941833, 0, 1, 0, -0.38941833, 0, 0.921061, -7.6, 0, -7.2)
+
+[node name="Banner" parent="Dressing" unique_id=242178687 instance=ExtResource("17_banner")]
+transform = Transform3D(3.1391647e-07, 0, 1, 0, 1, 0, -1, 0, 3.1391647e-07, 25.8, 0.2, 5.3)
+
+[node name="Chest" parent="Dressing" unique_id=321655363 instance=ExtResource("18_chest")]
+transform = Transform3D(0.9553365, 0, -0.29552022, 0, 1, 0, 0.29552022, 0, 0.9553365, 13.2, 0, 6.6)
+
+[node name="Market" type="StaticBody3D" parent="Dressing" unique_id=71098851]
+
+[node name="Cart" parent="Dressing/Market" unique_id=1150782651 instance=ExtResource("15_cart")]
+transform = Transform3D(0.9393727, 0, -0.3428978, 0, 1, 0, 0.3428978, 0, 0.9393727, 12.5, 0, 3.5)
+
+[node name="CartBlock" type="CollisionShape3D" parent="Dressing/Market" unique_id=901207526]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 0.95, 3.5)
+shape = SubResource("BoxShape3D_cart")
+
+[node name="Stall" parent="Dressing/Market" unique_id=1456480072 instance=ExtResource("16_stall")]
+transform = Transform3D(-1, 0, -3.2584137e-07, 0, 1, 0, 3.2584137e-07, 0, -1, 15.5, 0, -4.5)
+
+[node name="StallBlock" type="CollisionShape3D" parent="Dressing/Market" unique_id=375680076]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5, 1.3, -4.5)
+shape = SubResource("BoxShape3D_stall")
+
+[node name="Barrels" type="StaticBody3D" parent="Dressing" unique_id=1477321844]
+
+[node name="ByPenBlock" type="CollisionShape3D" parent="Dressing/Barrels" unique_id=492260373]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.2, 0.62, 9)
+shape = SubResource("BoxShape3D_ogrjq")
+
+[node name="BarrelABlock" type="CollisionShape3D" parent="Dressing/Barrels" unique_id=1632705404]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.2, 0.45, -6.4)
+shape = SubResource("BoxShape3D_mu7p8")
+
+[node name="BarrelBBlock" type="CollisionShape3D" parent="Dressing/Barrels" unique_id=1937258008]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4, 0.45, -6.9)
+shape = SubResource("BoxShape3D_v3dlt")
+
+[node name="Actors" type="Node3D" parent="." unique_id=665385903]
+
+[node name="Player" parent="Actors" unique_id=1125508692 instance=ExtResource("1_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6)
+
+[node name="Villager" parent="Actors" unique_id=1991043667 instance=ExtResource("3_villager")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 2)
+
+[node name="OldMan" parent="Actors" unique_id=899328199 instance=ExtResource("2_npc")]
+transform = Transform3D(0.87758255, 0, 0.47942555, 0, 1, 0, -0.47942555, 0, 0.87758255, 9, 0, 7)
+speaker_name = "Old Bran"
+body_color = Color(0.62, 0.63, 0.68, 1)
+body_scale = 0.95
+lines = PackedStringArray("I have not lifted a blade in thirty years, child.", "Once I could have met them at the gate. Now I only watch.", "Do not let the fields go quiet. That is how it starts.")
+speed = 0.8
+wander_radius = 1.2
+
+[node name="Mother" parent="Actors" unique_id=2057657236 instance=ExtResource("2_npc")]
+transform = Transform3D(0.921061, 0, -0.38941833, 0, 1, 0, 0.38941833, 0, 0.921061, -15, 0, 6)
+speaker_name = "Mother"
+body_color = Color(0.5, 0.62, 0.45, 1)
+lines = PackedStringArray("Hush now. Stay close to me.", "The goblins came right up to the fence last night.", "We have not slept properly in a fortnight.")
+speed = 0.9
+wander_radius = 1.1
+
+[node name="Child" parent="Actors" unique_id=1618072906 instance=ExtResource("2_npc")]
+transform = Transform3D(0.6967067, 0, 0.7173561, 0, 1, 0, -0.7173561, 0, 0.6967067, -14, 0, 7)
+speaker_name = "Child"
+body_color = Color(0.85, 0.75, 0.52, 1)
+body_scale = 0.65
+lines = PackedStringArray("Mama says the sheep will be all right.", "The goblins are small. But there are so many.", "You will come back, won\'t you?")
+speed = 1.2
+wander_radius = 1.6
+
+[node name="Sheep1" parent="Actors" unique_id=1010673679 instance=ExtResource("4_sheep")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0, 10)
+
+[node name="Sheep2" parent="Actors" unique_id=2119986073 instance=ExtResource("4_sheep")]
+transform = Transform3D(-0.50484604, 0, 0.8632094, 0, 1, 0, -0.8632094, 0, -0.50484604, -27, 0, 14.5)
+
+[node name="Sheep3" parent="Actors" unique_id=63605799 instance=ExtResource("4_sheep")]
+transform = Transform3D(0.3623577, 0, -0.9320391, 0, 1, 0, 0.9320391, 0, 0.3623577, -23.5, 0, 14.5)
+
+[node name="Sheep4" parent="Actors" unique_id=1224087875 instance=ExtResource("4_sheep")]
+transform = Transform3D(-0.9899925, 0, 0.14112, 0, 1, 0, -0.14112, 0, -0.9899925, -21.5, 0, 9.5)
+
+[node name="Goblin1" parent="Actors" unique_id=748141703 instance=ExtResource("5_goblin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34, 0, -6)
+
+[node name="Goblin2" parent="Actors" unique_id=1964188229 instance=ExtResource("5_goblin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 0, 8)
+
+[node name="Goblin3" parent="Actors" unique_id=1183670448 instance=ExtResource("5_goblin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 0, -3)
+
+[node name="Herb" parent="Actors" unique_id=1489182128 instance=ExtResource("6_herb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 0, 4)
+
+[node name="UI" parent="." unique_id=1920752250 instance=ExtResource("11_ui")]
+
+[node name="Checkpoints" type="Node3D" parent="." unique_id=1673353172]
+script = ExtResource("21_v3dlt")
+
+[node name="LampPostField" parent="Checkpoints" unique_id=460134231 instance=ExtResource("21_lamppost")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 0, 7)
+
+[node name="LampPostMid" parent="Checkpoints" unique_id=218064323 instance=ExtResource("21_lamppost")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0, -8)
+checkpoint_id = "field_mid"
+
+[node name="LampPostDeep" parent="Checkpoints" unique_id=1855215840 instance=ExtResource("21_lamppost")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 0, 12)
+checkpoint_id = "field_deep"

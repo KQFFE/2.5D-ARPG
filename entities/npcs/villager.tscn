@@ -1,0 +1,58 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://entities/npcs/villager.gd" id="1_villager"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
+radius = 0.34
+height = 1.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
+albedo_color = Color(0.78, 0.52, 0.38, 1)
+roughness = 0.92
+
+[sub_resource type="BoxMesh" id="BoxMesh_front"]
+size = Vector3(0.16, 0.16, 0.3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_front"]
+albedo_color = Color(0.32, 0.24, 0.18, 1)
+roughness = 0.9
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_interaction"]
+radius = 2.6
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_villager"]
+radius = 0.34
+height = 1.6
+
+[node name="Villager" type="CharacterBody3D"]
+motion_mode = 1
+script = ExtResource("1_villager")
+speed = 0.9
+wander_radius = 1.6
+pause_min = 2.0
+pause_max = 4.0
+speaker_name = "Mira"
+body_color = Color(0.78, 0.52, 0.38, 1)
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Body" type="MeshInstance3D" parent="Visual"]
+position = Vector3(0, 0.8, 0)
+mesh = SubResource("CapsuleMesh_body")
+material_override = SubResource("StandardMaterial3D_body")
+
+[node name="Front" type="MeshInstance3D" parent="Visual"]
+position = Vector3(0, 0.95, -0.38)
+mesh = SubResource("BoxMesh_front")
+material_override = SubResource("StandardMaterial3D_front")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.8, 0)
+shape = SubResource("CapsuleShape3D_villager")
+
+[node name="InteractionArea" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="Shape" type="CollisionShape3D" parent="InteractionArea"]
+shape = SubResource("SphereShape3D_interaction")

@@ -1,0 +1,34 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/dialogue_box.gd" id="1_box"]
+
+[node name="DialogueBox" type="CanvasLayer"]
+script = ExtResource("1_box")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 60.0
+offset_top = -180.0
+offset_right = -60.0
+offset_bottom = -40.0
+
+[node name="Speaker" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 8.0
+offset_right = 400.0
+offset_bottom = 34.0
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.95, 0.86, 0.62, 1)
+
+[node name="Text" type="RichTextLabel" parent="Panel"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 38.0
+offset_right = -24.0
+offset_bottom = -14.0

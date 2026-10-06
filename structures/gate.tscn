@@ -1,0 +1,62 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="ShaderMaterial" path="res://materials/gate_beam.tres" id="1_gate_beam"]
+[ext_resource type="ShaderMaterial" path="res://materials/iron.tres" id="2_iron"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_post"]
+size = Vector3(0.36, 4, 0.36)
+
+[sub_resource type="BoxMesh" id="BoxMesh_lintel"]
+size = Vector3(9.9, 0.45, 0.45)
+
+[sub_resource type="BoxMesh" id="BoxMesh_plank"]
+size = Vector3(2.6, 1.8, 0.18)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_post"]
+size = Vector3(0.36, 4, 0.36)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_plank"]
+size = Vector3(2.6, 1.8, 0.18)
+
+[node name="Gate" type="StaticBody3D"]
+
+[node name="PostLeft" type="MeshInstance3D" parent="."]
+position = Vector3(-4.6, 2, 0)
+mesh = SubResource("BoxMesh_post")
+material_override = ExtResource("1_gate_beam")
+
+[node name="PostRight" type="MeshInstance3D" parent="."]
+position = Vector3(4.6, 2, 0)
+mesh = SubResource("BoxMesh_post")
+material_override = ExtResource("1_gate_beam")
+
+[node name="Lintel" type="MeshInstance3D" parent="."]
+position = Vector3(0, 4, 0)
+mesh = SubResource("BoxMesh_lintel")
+material_override = ExtResource("1_gate_beam")
+
+[node name="PlankLeft" type="MeshInstance3D" parent="."]
+position = Vector3(-3.3, 1, 0)
+mesh = SubResource("BoxMesh_plank")
+material_override = ExtResource("2_iron")
+
+[node name="PlankRight" type="MeshInstance3D" parent="."]
+position = Vector3(3.3, 1, 0)
+mesh = SubResource("BoxMesh_plank")
+material_override = ExtResource("2_iron")
+
+[node name="CollisionPostLeft" type="CollisionShape3D" parent="."]
+position = Vector3(-4.6, 2, 0)
+shape = SubResource("BoxShape3D_post")
+
+[node name="CollisionPostRight" type="CollisionShape3D" parent="."]
+position = Vector3(4.6, 2, 0)
+shape = SubResource("BoxShape3D_post")
+
+[node name="CollisionPlankLeft" type="CollisionShape3D" parent="."]
+position = Vector3(-3.3, 1, 0)
+shape = SubResource("BoxShape3D_plank")
+
+[node name="CollisionPlankRight" type="CollisionShape3D" parent="."]
+position = Vector3(3.3, 1, 0)
+shape = SubResource("BoxShape3D_plank")

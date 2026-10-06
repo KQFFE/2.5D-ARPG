@@ -1,0 +1,27 @@
+# Project rules
+
+## Input and controls
+- Every input action must be rebindable from a settings screen. Gameplay code queries
+  actions by name only (`Input.is_action_pressed("attack")`) and never reads raw
+  keycodes or mouse buttons, so rebinding is purely an InputMap concern.
+- Control vocabulary (all InputMap actions): move_up, move_down, move_left, move_right,
+  run (hold to sprint), jump, dash (has a cooldown), attack, parry, interact.
+- Default bindings: move = WASD + arrow keys, run = Shift, jump = Space, dash = Q,
+  attack = left mouse, parry = right mouse, interact = E, settings = Tab; joypad
+  A/B/X for jump/run/dash, RB attack, LB parry. Gamepad movement is the LEFT STICK
+  (axis 0 for left/right, axis 1 for up/down) - never face buttons, which stay on
+  actions. Interact is E only - Space is jump and must never double as interact, so
+  jumping next to an NPC does not start dialogue.
+
+## Structure
+- One entity per file: player, npcs, animals, monsters and props each live under
+  res://entities/<type>/<name>.tscn + .gd. Buildings and reusable architecture live
+  under res://structures/. Shared logic lives under res://scripts/. UI under res://ui/.
+- Prefer one reusable scene instanced many times with exported tunables over duplicated
+  scenes (one cottage.tscn for every cottage, one fence.tscn for every fence run).
+- res://main.tscn stays a thin entry point that only instances res://scenes/village.tscn.
+
+## Rendering
+- Structures that can hide the player fade via res://shaders/occluder_fade.gdshader,
+  driven by res://scripts/occluder_fader.gd. The fade must stay a GPU-side screen-space
+  circle with one uniform write per moved frame - no per-object scripts, traversal or raycasts.

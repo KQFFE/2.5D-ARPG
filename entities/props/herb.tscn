@@ -1,0 +1,52 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://entities/props/herb_pickup.gd" id="1_herb"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_stem"]
+top_radius = 0.05
+bottom_radius = 0.07
+height = 0.5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_stem"]
+albedo_color = Color(0.32, 0.5, 0.24, 1)
+roughness = 0.9
+
+[sub_resource type="SphereMesh" id="SphereMesh_leaf"]
+radius = 0.24
+height = 0.48
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_leaf"]
+albedo_color = Color(0.55, 0.86, 0.48, 1)
+emission_enabled = true
+emission = Color(0.42, 0.78, 0.42, 1)
+emission_energy_multiplier = 0.6
+roughness = 0.7
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_herb"]
+radius = 1.2
+
+[node name="Herb" type="Area3D"]
+script = ExtResource("1_herb")
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Stem" type="MeshInstance3D" parent="Visual"]
+position = Vector3(0, 0.25, 0)
+mesh = SubResource("CylinderMesh_stem")
+material_override = SubResource("StandardMaterial3D_stem")
+
+[node name="Leaf" type="MeshInstance3D" parent="Visual"]
+position = Vector3(0, 0.62, 0)
+mesh = SubResource("SphereMesh_leaf")
+material_override = SubResource("StandardMaterial3D_leaf")
+
+[node name="Glow" type="OmniLight3D" parent="Visual"]
+position = Vector3(0, 0.8, 0)
+light_color = Color(0.62, 0.95, 0.6, 1)
+light_energy = 1.1
+omni_range = 4.0
+shadow_enabled = false
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.6, 0)
+shape = SubResource("SphereShape3D_herb")

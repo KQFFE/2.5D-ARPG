@@ -1,0 +1,46 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://entities/animals/sheep.gd" id="1_sheep"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_wool"]
+radius = 0.42
+height = 0.84
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wool"]
+albedo_color = Color(0.93, 0.9, 0.84, 1)
+roughness = 0.98
+
+[sub_resource type="BoxMesh" id="BoxMesh_head"]
+size = Vector3(0.26, 0.28, 0.34)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_head"]
+albedo_color = Color(0.42, 0.4, 0.36, 1)
+roughness = 0.85
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_sheep"]
+radius = 0.42
+height = 1.0
+
+[node name="Sheep" type="CharacterBody3D"]
+motion_mode = 1
+script = ExtResource("1_sheep")
+speed = 0.45
+wander_radius = 1.5
+pause_min = 2.5
+pause_max = 5.0
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Wool" type="MeshInstance3D" parent="Visual"]
+position = Vector3(0, 0.45, 0)
+mesh = SubResource("SphereMesh_wool")
+material_override = SubResource("StandardMaterial3D_wool")
+
+[node name="Head" type="MeshInstance3D" parent="Visual"]
+position = Vector3(0, 0.5, -0.4)
+mesh = SubResource("BoxMesh_head")
+material_override = SubResource("StandardMaterial3D_head")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.45, 0)
+shape = SubResource("CapsuleShape3D_sheep")
