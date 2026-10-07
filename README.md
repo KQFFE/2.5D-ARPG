@@ -141,26 +141,27 @@ be (east), which is now world north. The fence run names (`FenceN01`, `FenceE03`
 - `Fields` - 50x50 darker green patch centred at world (0, -55), north of the
   gate.
 - `Structures/` - `Cottage1..Cottage5`, `Gate` (world 0, 0, -26: on the north
-  edge, spanning the lane), `Pen` (world -12, 0, -25, holds the sheep), and fence
-  runs `FenceN01..N12`, `FenceS01..S12`, `FenceW01..W08`, `FenceE01..E06`
-  forming the village boundary with the gap on the NORTH side for the gate.
-  Cottages 1-3 stand in a row west of centre, south of the lane; 4 and 5 are at
-  world (-13, -14) and (-12, 6).
+  edge, spanning the lane), `Pen` (world 12, 0, 25 - south-east of centre, holds
+  the sheep), and fence runs `FenceN01..N12`, `FenceS01..S12`, `FenceW01..W08`,
+  `FenceE01..E06` forming the village boundary with the gap on the NORTH side for
+  the gate. Cottages 1-3 sit west of centre at world (-9, 12), (-11, 2) and
+  (-9, 8); 4 and 5 are at world (13, 14) and (12, -6).
 - `Dressing/` - library props: `BarrelA`, `BarrelB`, `BarrelsByPen`, `Bench`,
   `Anvil`, `Banner`, `Chest`, and a `Market` StaticBody3D holding `Cart` + `Stall`.
   `Dressing/Barrels` is a StaticBody3D holding the collision shapes for the
   barrels (`ByPenBlock`, `BarrelABlock`, `BarrelBBlock`) - the barrel meshes
   themselves are children of `Dressing` but their colliders live here.
 - `Actors/` - `Player`, `Villager`, `OldMan`, `Mother`, `Child`, `Sheep1..4`,
-  `Goblin1..3`, `Herb`.
-- `Checkpoints/` - checkpoint manager + `LampPostField`, `LampPostMid`,
-  `LampPostDeep` (section 10).
+  `Goblin1..3`, `Herb`. `Actors` is NOT one of the rotated groups, so these
+  transforms are plain world coordinates.
+- `Checkpoints/` - checkpoint manager + `LampPostMid`, `LampPostDeep`
+  (section 10). This group IS rotated, so a post's local transform is pre-turn.
 - `UI` - the `dialogue_box.tscn` instance.
 
 Approximate actor placement (world x, z): Player (6,0) spawn; Villager (2,4);
-OldMan (-7,9); Mother (-6,-15); Child (-7,-14); Sheep inside the fenced pen
-around (9..15, -27..-22); Goblins north of the gate, out in the field, at
-(34,-6), (48,8), (60,-3); Herb (44,4) - the quest item is out in the field too.
+OldMan (7,-9); Mother (6,15); Child (7,14); Sheep inside the fenced pen at
+(9.5..14.5, 21.5..28); Goblins north of the gate, out in the field, at (-6,-34),
+(8,-48), (-3,-60); Herb (4,-44) - the quest item is out in the field too.
 
 ---
 
@@ -350,10 +351,10 @@ immediately on activation. Loads it again at startup, so the recorded point
 survives quitting. `respawn_position(fallback)` returns the fallback (where the
 village placed the player) until a checkpoint has actually been reached.
 
-**Placed posts:** `LampPostField` id `field_gate` at world (7, 0, 36) - just
-north of the gate, out on the field; `LampPostMid` id `field_mid` at (50, 0, 8);
-`LampPostDeep` id `field_deep` at (64, 0, -12). All three sit in the field beyond
-the gate. The most recently reached post is the respawn.
+**Placed posts:** `LampPostMid` id `field_mid` at world (-8, 0, -50) and
+`LampPostDeep` id `field_deep` at world (12, 0, -64), both out in the field north
+of the gate. The most recently reached post is the respawn. (The old
+`LampPostField` id `field_gate` has been removed.)
 
 **The lit lamp.** `res://scripts/lamppost.gd` extends `checkpoint.gd` and
 overrides its `set_lit()` hook, so the lamp post scene still carries ONE script:
@@ -361,14 +362,16 @@ while this post is the active save point the lantern glass glows (emission on,
 albedo up) and its `Glow` OmniLight3D shines; as soon as another post takes over
 it goes back to dark glass with the light off. Exactly one lamp in the village
 burns at a time.
-The manager announces every change with the `checkpoint_activated(id)` signal -
-including the point it restores from `user://checkpoint.cfg` at startup, which is
-why the correct lamp is lit on a fresh boot rather than all of them dark (a
-child's `_ready` runs before its parent's, so the posts are already listening
-when the manager loads).
+The manager announces every change with the `checkpoint_activated(id)` signal.
+A post is a CHILD of the `Checkpoints` group, so its `_ready` runs BEFORE the
+manager's - looking the manager up on that same frame finds nothing, which is
+why no lamp lit at all to begin with. `checkpoint.gd` therefore defers the
+lookup by one frame and then also reads `current_id()`, so the point restored
+from `user://checkpoint.cfg` lights its lamp on a fresh boot rather than leaving
+every post dark.
 Nothing is wired per instance: the `Lantern` mesh and `Glow` light are found by
-name, and the glass material is duplicated before it is touched, so the three
-posts never share one material.
+name, and the glass material is duplicated before it is touched, so posts never
+share one material.
 
 **Adding a post:** instance `lamppost.tscn` under `Checkpoints` and give it a
 unique `checkpoint_id`. Nothing else is needed - posts find the manager through

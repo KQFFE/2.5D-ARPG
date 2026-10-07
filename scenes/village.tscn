@@ -22,7 +22,6 @@
 [ext_resource type="Script" uid="uid://cust64sb6anh4" path="res://scripts/occluder_fader.gd" id="20_fader"]
 [ext_resource type="PackedScene" path="res://structures/lamppost.tscn" id="21_lamppost"]
 [ext_resource type="Script" uid="uid://ckqyiucaqrf2" path="res://scripts/checkpoint_manager.gd" id="21_v3dlt"]
-[ext_resource type="Script" path="res://scripts/lamppost.gd" id="23_kbuqd"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_village"]
 sky_top_color = Color(0.42, 0.56, 0.76, 1)
@@ -322,7 +321,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 4)
 
 [node name="OldMan" parent="Actors" unique_id=899328199 instance=ExtResource("2_npc")]
-transform = Transform3D(0.87758255, 0, 0.47942555, 0, 1, 0, -0.47942555, 0, 0.87758255, -7, 0, 9)
+transform = Transform3D(0.87758255, 0, 0.47942555, 0, 1, 0, -0.47942555, 0, 0.87758255, 7, 0, -9)
 speaker_name = "Old Bran"
 body_color = Color(0.62, 0.63, 0.68, 1)
 body_scale = 0.95
@@ -331,7 +330,7 @@ speed = 0.8
 wander_radius = 1.2
 
 [node name="Mother" parent="Actors" unique_id=2057657236 instance=ExtResource("2_npc")]
-transform = Transform3D(0.921061, 0, -0.38941833, 0, 1, 0, 0.38941833, 0, 0.921061, -6, 0, -15)
+transform = Transform3D(0.921061, 0, -0.38941833, 0, 1, 0, 0.38941833, 0, 0.921061, 6, 0, 15)
 speaker_name = "Mother"
 body_color = Color(0.5, 0.62, 0.45, 1)
 lines = PackedStringArray("Hush now. Stay close to me.", "The goblins came right up to the fence last night.", "We have not slept properly in a fortnight.")
@@ -339,7 +338,7 @@ speed = 0.9
 wander_radius = 1.1
 
 [node name="Child" parent="Actors" unique_id=1618072906 instance=ExtResource("2_npc")]
-transform = Transform3D(0.6967067, 0, 0.7173561, 0, 1, 0, -0.7173561, 0, 0.6967067, -7, 0, -14)
+transform = Transform3D(0.6967067, 0, 0.7173561, 0, 1, 0, -0.7173561, 0, 0.6967067, 7, 0, 14)
 speaker_name = "Child"
 body_color = Color(0.85, 0.75, 0.52, 1)
 body_scale = 0.65
@@ -348,28 +347,28 @@ speed = 1.2
 wander_radius = 1.6
 
 [node name="Sheep1" parent="Actors" unique_id=1010673679 instance=ExtResource("4_sheep")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, -25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 28)
 
 [node name="Sheep2" parent="Actors" unique_id=2119986073 instance=ExtResource("4_sheep")]
-transform = Transform3D(-0.50484604, 0, 0.8632094, 0, 1, 0, -0.8632094, 0, -0.50484604, 15, 0, -26.5)
+transform = Transform3D(-0.50484604, 0, 0.8632094, 0, 1, 0, -0.8632094, 0, -0.50484604, 14.5, 0, 27)
 
 [node name="Sheep3" parent="Actors" unique_id=63605799 instance=ExtResource("4_sheep")]
-transform = Transform3D(-0.3623577, 0, 0.9320391, 0, 1, 0, -0.9320391, 0, -0.3623577, 14.5, 0, -23.5)
+transform = Transform3D(-0.3623577, 0, 0.9320391, 0, 1, 0, -0.9320391, 0, -0.3623577, 14.5, 0, 23.5)
 
 [node name="Sheep4" parent="Actors" unique_id=1224087875 instance=ExtResource("4_sheep")]
-transform = Transform3D(0.9899925, 0, 0.14112, 0, 1, 0, -0.14112, 0, 0.9899925, 10, 0, -22.5)
+transform = Transform3D(0.9899925, 0, 0.14112, 0, 1, 0, -0.14112, 0, 0.9899925, 9.5, 0, 21.5)
 
 [node name="Goblin1" parent="Actors" unique_id=748141703 instance=ExtResource("5_goblin")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 34, 0, -6)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -6, 0, -34)
 
 [node name="Goblin2" parent="Actors" unique_id=1964188229 instance=ExtResource("5_goblin")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 48, 0, 8)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 8, 0, -48)
 
 [node name="Goblin3" parent="Actors" unique_id=1183670448 instance=ExtResource("5_goblin")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 60, 0, -3)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3, 0, -60)
 
 [node name="Herb" parent="Actors" unique_id=1489182128 instance=ExtResource("6_herb")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 0, 4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -44)
 
 [node name="UI" parent="." unique_id=1920752250 instance=ExtResource("11_ui")]
 
@@ -377,25 +376,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 0, 4)
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
 script = ExtResource("21_v3dlt")
 
-[node name="LampPostField" parent="Checkpoints" unique_id=572750452 instance=ExtResource("21_lamppost")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 36)
-script = ExtResource("23_kbuqd")
-lit_color = Color(1, 0.72, 0.34, 1)
-lit_emission = 1.6
-dark_factor = 0.22
-
 [node name="LampPostMid" parent="Checkpoints" unique_id=431533878 instance=ExtResource("21_lamppost")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0, 8)
-script = ExtResource("23_kbuqd")
-lit_color = Color(1, 0.72, 0.34, 1)
-lit_emission = 1.6
-dark_factor = 0.22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0, -8)
 checkpoint_id = "field_mid"
 
 [node name="LampPostDeep" parent="Checkpoints" unique_id=1807152022 instance=ExtResource("21_lamppost")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 0, -12)
-script = ExtResource("23_kbuqd")
-lit_color = Color(1, 0.72, 0.34, 1)
-lit_emission = 1.6
-dark_factor = 0.22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 0, 12)
 checkpoint_id = "field_deep"

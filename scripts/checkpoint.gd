@@ -28,13 +28,29 @@ func _ready() -> void:
 	# Dark until proven active, then follow the manager: it announces every change
 	# of the active checkpoint, including the one restored from the save file.
 	set_lit(false)
-	var manager := get_tree().get_first_node_in_group("checkpoint_manager")
-	if manager != null and manager.has_signal("checkpoint_activated"):
-		manager.connect("checkpoint_activated", _on_checkpoint_activated)
+	# Listen on the NEXT frame. A post is a child of the Checkpoints group, so its
+	# _ready runs BEFORE the manager's _ready - the manager is not in its group yet
+	# and a same-frame lookup finds nothing, which is why no lamp ever came on.
+	# Deferring guarantees the manager exists and has restored the saved point.
+	_connect_manager.call_deferred()
 	if _area == null:
 		push_warning("Checkpoint '%s' has no CheckpointArea child." % checkpoint_id)
 		return
 	_area.body_entered.connect(_on_body_entered)
+
+
+## Resolves the scene's checkpoint_manager and starts listening for activations.
+## Runs one frame after _ready, so the manager is guaranteed to be in its group.
+## It also applies the point already restored from the save file, because that
+## announce fired before this post could hear it.
+func _connect_manager() -> void:
+	var manager := get_tree().get_first_node_in_group("checkpoint_manager")
+	if manager == null:
+		return
+	if manager.has_signal("checkpoint_activated"):
+		manager.connect("checkpoint_activated", _on_checkpoint_activated)
+	if manager.has_method("current_id"):
+		_on_checkpoint_activated(String(manager.current_id()))
 
 
 ## Lit look hook. A plain marker post has nothing to light; the lantern version in
