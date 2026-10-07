@@ -19,6 +19,11 @@ extends CharacterBody3D
 ## res://scripts/checkpoint.gd and res://scripts/checkpoint_manager.gd), or back
 ## at their starting spot in the village when no checkpoint has been reached yet.
 ##
+## A dash also carries the player THROUGH people and creatures - NPCs, monsters
+## and animals sit on their own collision layer, and the dash drops that layer
+## for the burst - but never through a wall, floor or building, which share the
+## world layer and stay solid whatever the player is doing.
+##
 ## If an AnimatedSprite3D named "AnimatedSprite3D" is dropped in later with the
 ## usual four-direction clip names (walk_down/up/left/right, idle_down/up/
 ## left/right) this controller drives it with no code changes.
@@ -82,6 +87,12 @@ const PARRY_COLOR := Color(0.45, 0.70, 1.00)
 const PARRY_SUCCESS_COLOR := Color(0.50, 1.00, 0.55)
 const DASH_IFRAME_COLOR := Color(0.88, 0.94, 1.00)
 const ARC_ALPHA := 0.55
+## The collision layer actors sit on: NPCs, monsters and animals - see
+## res://entities/npcs/npc.tscn and its siblings, which are layer 2 with mask
+## 1|2. Keeping them off the world layer is what lets a dash carry the player
+## through a person or a creature while the walls, floors and buildings on
+## layer 1 stay solid whatever the player is doing.
+const ACTOR_LAYER := 2
 
 var _visual: Node3D = null
 var _sprite: AnimatedSprite3D = null
@@ -96,6 +107,10 @@ var _yaw := 0.0
 var _dash_time := 0.0
 var _dash_cd := 0.0
 var _dash_dir := Vector3(0.0, 0.0, -1.0)
+## The collision mask exactly as _ready found it, restored when a dash ends.
+var _base_mask := 0
+## True while actors block the player - every moment except mid-dash.
+var _actors_block := true
 
 var _attack_cd := 0.0
 var _attack_visual := 0.0
@@ -124,6 +139,12 @@ func _ready() -> void:
 	_health = get_node_or_null("Health") as Health
 	if _health != null:
 		_health.died.connect(_on_died)
+	# Actors sit on their own collision layer (ACTOR_LAYER) and the player's mask
+	# keeps that bit, so they stop the player like anything solid does; the dash
+	# clears it for its burst and this remembered value puts it back. Only the
+	# actor bit is ever dropped - the world on layer 1 stays solid either way.
+	_base_mask = collision_mask | ACTOR_LAYER
+	collision_mask = _base_mask
 	_start_position = global_position
 	_build_attack_arc()
 	DialogueManager.dialogue_started.connect(_on_dialogue_started)
@@ -245,6 +266,10 @@ func _input_dir() -> Vector3:
 
 func _physics_process(delta: float) -> void:
 	_tick_timers(delta)
+	# An active dash phases through actors and nothing else. Open or close that at
+	# the top, so anything that ends a dash mid-frame (death, respawn) is already
+	# accounted for before movement is resolved.
+	_set_actor_blocking(_dash_time <= 0.0)
 	# Dead: frozen at zero health until the pause elapses, then wake up.
 	if _respawn_timer > 0.0:
 		_respawn_timer = maxf(0.0, _respawn_timer - delta)
@@ -301,6 +326,9 @@ func _physics_process(delta: float) -> void:
 	if side_view:
 		velocity.z = 0.0
 	move_and_slide()
+	# The dash may have started or ended during this frame, so the actor bit is
+	# settled from the current dash state on the way out.
+	_set_actor_blocking(_dash_time <= 0.0)
 	_update_animation(moving and _dash_time <= 0.0)
 
 
@@ -317,6 +345,19 @@ func _tick_timers(delta: float) -> void:
 		_set_arc_color(ATTACK_COLOR)
 	if _arc != null:
 		_arc.visible = _attack_visual > 0.0 or _parry_time > 0.0
+
+
+## Opens or closes the player to actor collision. Every NPC, monster and animal
+## sits on ACTOR_LAYER: while that bit is in the mask they stop the player, and
+## while it is out - for the length of a dash - the player passes straight
+## through them. Layer 1 (ground, structures, props) is never touched, so a dash
+## can carry the player through a person or a creature but never through a wall,
+## a building or any other part of the world.
+func _set_actor_blocking(block: bool) -> void:
+	if block == _actors_block:
+		return
+	_actors_block = block
+	collision_mask = _base_mask if block else _base_mask & ~ACTOR_LAYER
 
 
 func _start_dash() -> void:

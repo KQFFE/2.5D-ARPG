@@ -32,6 +32,8 @@ height = 1.1
 
 [node name="Goblin" type="CharacterBody3D" unique_id=1929295271]
 motion_mode = 1
+collision_layer = 2
+collision_mask = 3
 script = ExtResource("1_goblin")
 swing_damage = 1.0
 speed = 0.9

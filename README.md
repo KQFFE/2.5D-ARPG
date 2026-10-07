@@ -191,6 +191,8 @@ OldMan (7,-9); Mother (6,15); Child (7,14); Sheep inside the fenced pen at
 `Visual` (Node3D, holds `Body` capsule + `Front` marker and rotates to face),
 `Collision` (CapsuleShape3D r0.35 h1.7), `CameraRig` (follow camera script),
 `Camera3D` (current, fov 55), `Health` (the shared Health component, max 5).
+The body sits on collision layer 1 (the world layer) with mask 1|2 - see
+**Collision layers** below.
 
 > **Motion mode matters.** The player MUST stay on grounded motion mode. In
 > floating mode `is_on_floor()` is never true, gravity accumulates forever and
@@ -248,6 +250,28 @@ broken enemy. This is checked BEFORE parry, so a dash is never punished by a hit
 that lands mid-burst. Set `invulnerable_while_dashing` to false if some future
 enemy is meant to be able to hit through a dash.
 
+**Dash pass-through**
+A dash also carries the player THROUGH actors - NPCs, monsters and animals - but
+never through a wall, a building or anything else solid. It is done with collision
+layers, not raycasts: every actor sits on layer 2 (`ACTOR_LAYER`), the player's
+mask normally includes that bit so an actor stops them like anything solid, and
+for the length of the dash the bit is dropped. `_set_actor_blocking()` is the only
+place that touches the mask, remembers the original in `_base_mask` at `_ready`,
+and is settled both at the top of `_physics_process` and after `move_and_slide()`
+so a dash that starts or ends mid-frame is never left in the wrong state.
+
+**Collision layers**
+Layer 1 is the world: ground, structures, props and the player body. Layer 2 is
+every actor - `npc.tscn`, `villager.tscn`, `goblin.tscn`, `sheep.tscn` - each
+`collision_layer 2` with `collision_mask 3` (1|2), so they still collide with the
+world, with each other and with the player. The player is layer 1 with mask 1|2.
+The actor bit is the only one a dash ever clears, which is exactly why a dash can
+pass through an NPC or a goblin but can never pass through a wall.
+
+> **Never move a structure onto layer 2.** Layer 2 is precisely the set of things
+> a dash may phase through. A building, fence, barrel or lamp post placed there
+> would silently become dash-through-able, and nothing in the code would say why.
+
 **Attack arc**
 The damage test and the visible wedge use the SAME numbers (`arc_reach`,
 `arc_half_angle_deg`), so what you see is what you hit. Enemies are found through
@@ -262,7 +286,9 @@ as a triangle fan opening along -Z.
 `res://entities/monsters/goblin.tscn` + `goblin.gd` (extends `wander_npc.gd`).
 
 **Scene:** `Goblin` (CharacterBody3D), `Visual` (Body/Head/Snout), `Collision`,
-`Health` (max 30). Adds itself to group `goblin`.
+`Health` (max 30). Adds itself to group `goblin`. Its body is collision layer 2
+with mask 1|2 (see **Collision layers** in section 5), so it blocks the player
+and can be dashed through.
 
 **State machine**
 
@@ -311,7 +337,9 @@ turns the `Visual` child so its -Z points along a direction. NPCs, sheep and
 goblins all inherit it. Exports: `speed`, `wander_radius`, `pause_min`,
 `pause_max`.
 
-**`npc.tscn` + `npc.gd`** - the base villager (extends `wander_npc.gd`). One scene
+**`npc.tscn` + `npc.gd`** - the base villager (extends `wander_npc.gd`). Its body
+sits on collision layer 2 with mask 1|2, like every actor (see **Collision layers**
+in section 5), so it is solid to walk around and can be dashed through. One scene
 covers every villager; variants are made by overriding exports per instance:
 `speaker_name`, `body_color`, `body_scale`, `lines` (PackedStringArray),
 `face_player_when_talking`. It has an `InteractionArea` (Area3D); when the player

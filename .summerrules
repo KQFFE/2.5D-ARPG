@@ -40,3 +40,17 @@
   new structure to compensate - place it and it turns with the group.
 - The fence run names (FenceN01, FenceE03, ...) date from the pre-turn layout and no longer
   describe the side they sit on.
+
+## Version control
+- The agent stages and commits each finished change itself, with a short descriptive
+  message, and leaves it at that. The user owns the remote and does every push: never run
+  git push, pull, checkout or discard. Reading git state (status, log, diff) is fine.
+
+## Collision layers
+- Layer 1 is the world and the player: ground, structures, props and the player body.
+- Layer 2 is actors - NPCs, monsters and animals (npc.tscn, villager.tscn, goblin.tscn,
+  sheep.tscn). They use mask 1|2, so they still collide with the world, with each other
+  and with the player. Never move a structure onto layer 2.
+- The player's mask is 1|2, so actors block it and cannot be walked through. Only the dash
+  drops the actor bit, for the length of its burst - which is what lets a dash pass through
+  a person or a creature, but never through a wall, floor or building.
