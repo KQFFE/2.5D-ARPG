@@ -1,10 +1,12 @@
 extends Node
 ## SaveGame - the autoload that owns save slots, one file per playthrough.
 ##
-## A slot is created by "New Game" and carries the character name (the
-## placeholder "Unnamed" until a naming screen exists), when it was last written,
-## and the point the player should come back to: the last lamp post they
-## interacted with.
+## A slot is created by "New Game" and carries everything that belongs to that
+## playthrough: the character name (the placeholder "Unnamed" until a naming
+## screen exists), when it was last written, the point the player should come back
+## to (the last lamp post they interacted with), and the player's OPTIONS - the
+## settings chosen in the menus, which therefore come back with the save instead
+## of being global to the installation.
 ##
 ## Files live in user://saves/<id>.cfg, so any number of slots can exist and the
 ## Load screen only has to list the five newest by write time.
@@ -16,6 +18,10 @@ extends Node
 
 const SAVE_DIR := "user://saves"
 const SECTION := "save"
+## Player options live in the SLOT, not in a global file, so a playthrough's
+## choices travel with it (see res://scripts/game_settings.gd). Keys are
+## arbitrary; an option this slot never set just reads back as its default.
+const OPTIONS_SECTION := "options"
 ## How many saved characters the Load screen lists, newest first.
 const MAX_LISTED := 5
 const PLACEHOLDER_NAME := "Unnamed"
@@ -31,6 +37,14 @@ var active_slot_id := ""
 ## Set by load_slot() when the slot has a recorded point; consumed once by the
 ## village so it can drop the player at the lamp post they last saved at.
 var _pending_spawn: Variant = null
+
+## The player options currently in effect, key -> value. load_slot() fills it from
+## a slot's [options] section; while no playthrough is active - which is the case
+## on the start screen's Settings page - it just holds the choices made this
+## session. new_game() clears it, so a new playthrough starts on the defaults even
+## after the player changed something from the start menu. One map serves both
+## cases so get_option() has a single place to read.
+var _options_cache: Dictionary = {}
 
 
 func _ready() -> void:
@@ -58,6 +72,9 @@ func new_game() -> void:
 		push_warning("SaveGame: could not create slot '%s' (error %d)" % [id, err])
 	active_slot_id = id
 	_pending_spawn = null
+	# A new playthrough starts on the defaults: nothing carries over from the
+	# previous character, including the options.
+	_options_cache.clear()
 
 
 ## Records the respawn point in the active slot. The village calls this whenever
@@ -76,28 +93,36 @@ func set_checkpoint(id: String, position: Vector3) -> void:
 		push_warning("SaveGame: could not write slot '%s' (error %d)" % [active_slot_id, err])
 
 
-## The in-game "Save & Quit": stamps the active slot with the current time, so it
-## sorts to the top of the Load screen. The respawn point was already mirrored in
-## by set_checkpoint() when the player reached a lamp post.
+## The in-game "Save & Quit": writes the options the player has chosen into the
+## slot, then stamps it with the current time so it sorts to the top of the Load
+## screen. The respawn point was already mirrored in by set_checkpoint() when the
+## player reached a lamp post.
 func save_active() -> void:
 	if active_slot_id.is_empty():
 		return
 	var config := ConfigFile.new()
 	config.load(_slot_path(active_slot_id))
+	_write_options_section(config)
 	config.set_value(SECTION, "updated", int(Time.get_unix_time_from_system()))
 	var err := config.save(_slot_path(active_slot_id))
 	if err != OK:
 		push_warning("SaveGame: could not write slot '%s' (error %d)" % [active_slot_id, err])
 
 
-## Makes `id` the active slot, restores its point into the village checkpoint file
-## and arms the spawn the player should be dropped at.
+## Makes `id` the active slot, restores its OPTIONS and its point, and arms the
+## spawn the player should be dropped at.
+##
+## The options are read BEFORE the has_spawn early-return below, because they have
+## nothing to do with the respawn point: a save made before the player ever
+## reached a lamp post still has options, and returning early would silently lose
+## them.
 func load_slot(id: String) -> void:
 	active_slot_id = id
 	_pending_spawn = null
 	var config := ConfigFile.new()
 	if config.load(_slot_path(id)) != OK:
 		return
+	_load_options_section(config)
 	if not bool(config.get_value(SECTION, "has_spawn", false)):
 		return
 	var position: Vector3 = config.get_value(SECTION, "position", Vector3.ZERO)
@@ -124,6 +149,38 @@ func consume_pending_spawn() -> Variant:
 
 func has_active_slot() -> bool:
 	return not active_slot_id.is_empty()
+
+
+# --- Player options (stored in the slot) ------------------------------------
+
+## The stored value for `key`, or `default_value` when this playthrough has never
+## set it. The cache is the single source of truth: set_option() keeps it current
+## and load_slot() refills it, so a choice made in the menus and a choice read
+## back from a loaded save go through exactly the same path. With no active slot -
+## the start screen's Settings page - the cache simply holds this session's
+## choices.
+func get_option(key: String, default_value: Variant) -> Variant:
+	return _options_cache.get(key, default_value)
+
+
+## Stores `key` for the active playthrough. Deliberately does NOT touch
+## "updated": changing an option is not saving progress, so it must not bump the
+## slot to the top of the Load list.
+##
+## With a slot active the value is written straight into the slot's [options]
+## section, so it survives even if the player never presses Save & Quit. With no
+## slot it lives in the cache until New Game or Load, which is what lets the start
+## screen's Settings page still show what was chosen.
+func set_option(key: String, value: Variant) -> void:
+	_options_cache[key] = value
+	if active_slot_id.is_empty():
+		return
+	var config := ConfigFile.new()
+	config.load(_slot_path(active_slot_id))
+	config.set_value(OPTIONS_SECTION, key, value)
+	var err := config.save(_slot_path(active_slot_id))
+	if err != OK:
+		push_warning("SaveGame: could not write option '%s' to slot '%s' (error %d)" % [key, active_slot_id, err])
 
 
 # --- Listing ----------------------------------------------------------------
@@ -174,6 +231,25 @@ func _newest_first(a: Dictionary, b: Dictionary) -> bool:
 
 func _slot_path(id: String) -> String:
 	return SAVE_DIR.path_join(id + ".cfg")
+
+
+## Copies every value of the in-memory cache into the slot's [options] section, so
+## a Save & Quit cannot leave a choice behind that set_option() had not already
+## written. Kept on the config being saved rather than writing the file itself,
+## so the caller saves once.
+func _write_options_section(config: ConfigFile) -> void:
+	for key in _options_cache:
+		config.set_value(OPTIONS_SECTION, String(key), _options_cache[key])
+
+
+## Refills the cache from a slot's [options] section. Replaces the whole cache,
+## so loading a save cannot leave the previous playthrough's choices behind.
+func _load_options_section(config: ConfigFile) -> void:
+	_options_cache.clear()
+	if not config.has_section(OPTIONS_SECTION):
+		return
+	for key in config.get_section_keys(OPTIONS_SECTION):
+		_options_cache[String(key)] = config.get_value(OPTIONS_SECTION, key)
 
 
 ## Writes the point the village checkpoint manager restores on start, so the

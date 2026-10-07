@@ -4,8 +4,9 @@ extends Control
 ##
 ## It holds one option so far - where the HP / mana display sits - because that is
 ## the only display choice the game has. The choice is stored by
-## res://scripts/game_settings.gd in user://settings.cfg, and pushed to any HUD
-## that is already live, so changing it from the pause menu moves the orbs
+## res://scripts/game_settings.gd in the active SAVE SLOT (see save_game.gd), so it
+## belongs to that playthrough and comes back with it on Load, and it is pushed to
+## any HUD that is already live, so changing it from the pause menu moves the orbs
 ## immediately instead of on the next scene load.
 ##
 ## Escape or Back emit back_requested, which SettingsMenu turns into "up one

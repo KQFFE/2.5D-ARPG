@@ -141,7 +141,9 @@ res://
 `GameSettings` (`res://scripts/game_settings.gd`) is deliberately NOT an autoload.
 It is a static `class_name` with no instance, so `GameSettings.hud_position()`
 resolves anywhere without one - and registering an autoload for it would fail,
-because the script extends `RefCounted`, not `Node`.
+because the script extends `RefCounted`, not `Node`. It keeps no data of its own:
+every option is read from and written to the ACTIVE SAVE SLOT, so settings belong
+to a playthrough rather than to the installation (see section 11).
 
 ---
 
@@ -604,7 +606,12 @@ checkpoint manager on every lamp activation), `save_active()` (Save & Quit -
 stamps the slot's time so it sorts to the top), `load_slot(id)` / `load_latest()`,
 `list_saves(max_count)` (newest first; entries are `{id, name, date}` with `date`
 already formatted `YYYY/MM/DD HH:MM:SS` in local time), `format_datetime(unix)`,
-`consume_pending_spawn()`, `has_active_slot()`. Loading writes the recorded point
+`consume_pending_spawn()`, `has_active_slot()`. It also owns the per-slot player
+options: `option(key, default)` / `set_option(key, value)` read and write the
+slot's `[options]` section, backed by an in-memory map that stands in while no
+playthrough is active (the start screen's Settings page) and is cleared by
+`new_game()`. `set_option` never touches the slot's `updated` stamp, so changing
+an option cannot reorder the Load list. Loading writes the recorded point
 back into `user://checkpoint.cfg`, so the normal village respawn pipeline does the
 work instead of a second codepath.
 
@@ -693,15 +700,30 @@ player arrives a frame late still ends up connected. The display hides itself
 while a dialogue is up, because the dialogue box owns the bottom of the screen.
 
 ### `game_settings.gd` (`class GameSettings`)
-Options that belong to the installation rather than to a save slot - how the game
-looks and behaves, not what the player has done. Stored in `user://settings.cfg`
-beside the save slots and the checkpoint file. STATIC on purpose: there is one set
-of options for the whole game, so nothing needs an instance and nothing is
-autoloaded. The file is read once and cached; `set_*` writes straight back, so a
-choice survives a restart with no "apply" step. One option so far:
-`hud_position()` / `set_hud_position()`, with `normalize_hud_position()` as the
-gate - an unrecognised value (a hand-edited file, an option removed later) falls
-back to `bottom` instead of leaving the HUD with nowhere to go.
+Player-facing options - how the game looks and behaves, not what the player has
+done - stored PER SAVE SLOT, never globally. The slot owns them, in its
+`[options]` section (`save_game.gd`), so a playthrough's choices travel with it:
+loading a save brings its options back, and New Game starts on the defaults
+because a fresh slot has none recorded. Changing an option is NOT progress, so
+`set_option()` deliberately leaves the slot's `updated` stamp alone and never
+bumps a save up the Load list.
+
+STATIC on purpose: there is one set of options per playthrough and no node of its
+own, so nothing needs an instance and nothing is autoloaded; the value is read off
+the slot each time, so a load mid-session cannot leave a stale copy behind.
+`option(key, default)` / `set_option(key, value)` are the generic pair - EVERY
+future setting is added the same way: a const for its key, a typed getter/setter,
+and that pair underneath. Nothing else has to change.
+
+One option so far: `hud_position()` / `set_hud_position()`, with
+`normalize_hud_position()` as the gate - an unrecognised value (a slot written by
+an older build, an option removed later) falls back to `bottom` instead of leaving
+the HUD with nowhere to go.
+
+> The start screen has a Settings page but no playthrough yet. Options chosen
+> there are held in memory by `SaveGame` so the page stays coherent, and
+> `new_game()` clears them - which is exactly why a new game starts on the
+> defaults even after something was changed from the main menu.
 
 ### `video_settings.tscn` + `video_settings.gd` (`res://ui/`)
 The one category page with real options, used for Video in place of the generic
@@ -933,3 +955,11 @@ a naming screen exists. `load_slot(id)` writes the point back into
 so the loaded lamp lights and the player respawns there. The manager also places
 the player at that point on scene entry (deferred one frame, via
 `consume_pending_spawn()`), so Load starts you at your last lamp post.
+
+**Options live in the slot.** The same file carries an `[options]` section holding
+the player's settings - currently the HP / mana display position - so they are
+saved and loaded WITH the playthrough rather than globally. `save_active()` writes
+them out; `load_slot()` reads them back; a New Game slot has none, so the game
+comes up on the defaults. Changing an option never restamps the slot, so it does
+not make an old save look recent. `res://.summerrules` records the rule that every
+future setting is added the same way.

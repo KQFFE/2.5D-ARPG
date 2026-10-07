@@ -46,6 +46,17 @@
   message, and leaves it at that. The user owns the remote and does every push: never run
   git push, pull, checkout or discard. Reading git state (status, log, diff) is fine.
 
+## Settings and persistence
+- Player settings are stored PER SAVE SLOT, never globally: they live in the slot's
+  `[options]` section (res://scripts/save_game.gd, reached through
+  res://scripts/game_settings.gd). Loading a save brings its settings back; New Game
+  starts on the defaults, and every future setting must follow this rule too.
+- Add a new setting by adding a key const plus a typed getter/setter to GameSettings and
+  storing it via option() / set_option(). Do not write a global settings file, and do
+  not put a setting in project.godot.
+- Changing a setting is not progress: it must not touch the slot's "updated" stamp or
+  otherwise reorder the Load list.
+
 ## Collision layers
 - Layer 1 is the world and the player: ground, structures, props and the player body.
 - Layer 2 is actors - NPCs, monsters and animals (npc.tscn, villager.tscn, goblin.tscn,
