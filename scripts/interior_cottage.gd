@@ -29,11 +29,11 @@ extends Node3D
 @export var camera_distance := 21.0
 ## The X of the side walls: the plane a doorway sits in.
 @export var wall_x := 6.0
-## How far inside the door an arriving player is placed, metres. Deliberately
-## most of the way in: landing right against the door wall leaves the player at
-## the very edge of the frame, or past it, and they have to walk in before the
-## character is even on screen.
-@export var entry_inset := 3.0
+## How far inside the door an arriving player is placed, metres. Kept small, so
+## the player steps in just past the doorway rather than appearing deep in the
+## room. Landing near the door wall is safe now that the camera below is
+## levelled: the whole room width stays on screen, door wall included.
+@export var entry_inset := 1.0
 
 @onready var _room_camera: Camera3D = $RoomCamera
 @onready var _exit_door: Area3D = $ExitDoor
