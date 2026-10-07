@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://entities/npcs/npc.tscn" id="8_npc"]
 [ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="10_ui"]
 [ext_resource type="PackedScene" path="res://ui/hud.tscn" id="11_hud"]
+[ext_resource type="PackedScene" path="res://ui/pause_menu.tscn" id="11_ug421"]
 
 [sub_resource type="Environment" id="Environment_interior"]
 background_mode = 1
@@ -201,7 +202,7 @@ pause_max = 6.0
 
 [node name="UI" parent="." unique_id=861801237 instance=ExtResource("10_ui")]
 
-[node name="HUD" parent="." instance=ExtResource("11_hud")]
+[node name="HUD" parent="." unique_id=837576404 instance=ExtResource("11_hud")]
 
 [node name="RoomCamera" type="Camera3D" parent="." unique_id=1067198910]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 21)
@@ -217,3 +218,5 @@ outward = Vector3(-1, 0, 0)
 
 [node name="ExitShape" type="CollisionShape3D" parent="ExitDoor" unique_id=748186416]
 shape = SubResource("BoxShape3D_exit")
+
+[node name="PauseMenu" parent="." unique_id=884713917 instance=ExtResource("11_ug421")]

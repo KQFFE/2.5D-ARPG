@@ -16,7 +16,9 @@ that must not be broken, and what is still missing.
 - **Entry scene:** `res://ui/main_menu.tscn` (set in `project.godot` as
   `application/run/main_scene`) - the start screen. New Game loads
   `res://main.tscn`, the gameplay entry point: a `Node3D` root named `Main` that
-  instances `res://scenes/village.tscn` plus the in-game pause menu.
+  instances `res://scenes/village.tscn` plus the in-game pause menu. The two
+  interiors are separate root scenes reached through a doorway, so each one also
+  carries its own HUD and pause menu (see section 9).
 - **Play:** press Play in the editor -> start screen -> New Game -> `Village`.
   See section 16 for the menus and saving.
 - **Renderer:** Forward+, D3D12 on Windows, Jolt physics, MSAA 4x,
@@ -70,6 +72,7 @@ res://
 							 dressing, actors, checkpoints, UI
 	interior_cottage.tscn    side-view interior behind Cottage3 (north-west)
 	interior_house.tscn      side-view interior behind Cottage5 (north-east)
+                         (each interior root also carries the HUD and pause menu)
 
   entities/
 	player/    player.tscn + player_controller.gd
@@ -413,6 +416,13 @@ project's first switch from the 3D village to that 2.5D mode.
   `res://ui/dialogue_box.tscn` as `UI`: an interior is its own scene, so without
   it the elder's lines would start a dialogue with nothing on screen to read or
   dismiss.
+- **An interior is a whole root scene, so it carries its own UI.** A house does
+  not overlay the village - it REPLACES the tree, so anything that must exist
+  while playing has to be in the interior as well. Each interior instances
+  `res://ui/dialogue_box.tscn` (as `UI`), `res://ui/hud.tscn` (the HP / mana orbs,
+  section 5) and `res://ui/pause_menu.tscn`. Without that last one the game could
+  not be paused indoors at all, which is exactly what happened while the pause
+  menu lived only in `main.tscn`.
 - **Which cottages can be entered is per instance, not baked into the shared
   scene.** `res://structures/cottage.tscn` carries
   `res://scripts/enterable_cottage.gd`, whose `enterable` and `interior_scene`
@@ -868,6 +878,12 @@ append the attribution lines to `res://LICENSES_SUMMER_ASSETS.md` if it exists.
   every key event, so the press opened it and the repeat events shut it again - it
   only stayed up while the key was held. It now ignores the toggle actions until
   every bound key is physically released.
+- **A scene change replaces the WHOLE tree, not just the world.** The
+  `SceneRouter` doorway swap frees every node in the old scene, so anything that
+  must exist while playing has to be instanced in EACH root scene. The HUD and the
+  pause menu both had to be added to `interior_cottage.tscn` and
+  `interior_house.tscn` for this reason - the pause menu lived only in `main.tscn`,
+  so ESC and Start did nothing once the player walked into a house.
 - **A brand-new `class_name` is not in the class cache yet.** `hud.gd` annotated its
   two orb nodes with `Orb` - the `class_name` declared in `orb.gd`, written in the
   same batch - and the engine refused to load `hud.gd` at all (`Could not find
@@ -898,8 +914,9 @@ driven by the `InputRemap` autoload. A page opened from the pause menu applies t
 the running game immediately, because pausing keeps the tree alive: picking a new
 display position moves the orbs without a scene reload.
 
-**In-game menu** `res://ui/pause_menu.tscn`, instanced by `res://main.tscn` so it
-only exists while playing. From the top: "Save & Quit", then "Settings". It opens
+**In-game menu** `res://ui/pause_menu.tscn`, instanced by `res://main.tscn` AND by
+each interior root scene, so it exists in every gameplay context and never on the
+start screen. From the top: "Save & Quit", then "Settings". It opens
 and closes on `ui_cancel` (Escape) and on the `settings` action (Tab / gamepad
 START). One press opens it and it STAYS open: a release lock ignores the actions
 until every bound key is physically up, so a held key cannot flicker it shut.
