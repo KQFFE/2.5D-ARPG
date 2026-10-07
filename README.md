@@ -397,6 +397,11 @@ project's first switch from the 3D village to that 2.5D mode.
   `exit_clearance` beyond it, plus `lateral_clearance` to the opposite side when the
   player left sideways - and hands it to `res://scripts/entry_spawn.gd` in the
   village, which applies it one frame later.
+- **The player keeps the facing they left with.** That same travel direction is
+  handed to the player's `set_facing()` on arrival - by `entry_spawn.gd` when
+  leaving a building, and by `interior_cottage.gd` when entering one - so walking
+  out of a door facing left leaves you facing left on the street instead of
+  snapping back to the player scene's default facing.
 - `res://scripts/scene_router.gd` (`class_name SceneRouter`) carries that payload
   across the scene change as static state, so no autoload was needed and
   `project.godot` is untouched.

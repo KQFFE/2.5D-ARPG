@@ -195,6 +195,22 @@ func facing_dir() -> Vector3:
 	return Vector3(-sin(_yaw), 0.0, -cos(_yaw))
 
 
+## Points the Visual along `dir` straight away (XZ only), so a doorway can hand
+## the player's facing across a scene change: walk out of a house facing left and
+## you arrive outside still facing left. The body itself never rotates - only the
+## Visual child does, exactly as _aim() does it while walking. The idle animation
+## is refreshed too, so the sprite agrees with the new facing before they move.
+func set_facing(dir: Vector3) -> void:
+	var flat := Vector3(dir.x, 0.0, dir.z)
+	if flat.length_squared() < 0.0001:
+		return
+	_yaw = atan2(-flat.x, -flat.z)
+	_facing = _dir_to_name(flat)
+	if _visual != null:
+		_visual.rotation.y = _yaw
+	_update_animation(false)
+
+
 func _physics_process(delta: float) -> void:
 	_tick_timers(delta)
 	# Dead: frozen at zero health until the pause elapses, then wake up.

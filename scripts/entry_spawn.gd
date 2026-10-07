@@ -16,13 +16,19 @@ func _ready() -> void:
 	var spawn: Variant = payload.get("spawn")
 	if spawn == null:
 		return
-	_place_player.call_deferred(spawn as Vector3)
+	# The direction the player was going when they left the building travels with
+	# them, so they arrive facing the way they walked out instead of snapping back
+	# to the player scene's default facing.
+	var dir: Vector3 = payload.get("dir", Vector3.ZERO)
+	_place_player.call_deferred(spawn as Vector3, dir)
 
 
-func _place_player(spawn: Vector3) -> void:
+func _place_player(spawn: Vector3, dir: Vector3) -> void:
 	var player := get_tree().get_first_node_in_group("player") as Node3D
 	if player == null:
 		return
 	player.global_position = spawn
 	if player is CharacterBody3D:
 		(player as CharacterBody3D).velocity = Vector3.ZERO
+	if player.has_method("set_facing"):
+		player.call("set_facing", dir)

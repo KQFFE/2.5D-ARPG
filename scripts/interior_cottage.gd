@@ -56,7 +56,9 @@ func _ready() -> void:
 	var dir: Vector3 = payload.get("dir", Vector3.ZERO)
 	var side := _door_side(dir)
 	_apply_door_side(side)
-	_place_player.call_deferred(side)
+	# `dir` is carried on, so the player keeps facing the way they walked in -
+	# deeper into the room - rather than snapping to the scene's default facing.
+	_place_player.call_deferred(side, dir)
 
 
 func _process(_delta: float) -> void:
@@ -88,14 +90,17 @@ func _apply_door_side(side: int) -> void:
 	_door_light.position = Vector3(wall - 1.4 * float(side), 2.6, 0.5)
 
 
-## Drops the player just inside the door they came through.
-func _place_player(side: int) -> void:
+## Drops the player just inside the door they came through, still facing the way
+## they walked in.
+func _place_player(side: int, dir: Vector3) -> void:
 	var player := get_tree().get_first_node_in_group("player") as Node3D
 	if player == null:
 		return
 	player.global_position = Vector3(float(side) * (wall_x - entry_inset), 0.05, 0.0)
 	if player is CharacterBody3D:
 		(player as CharacterBody3D).velocity = Vector3.ZERO
+	if player.has_method("set_facing"):
+		player.call("set_facing", dir)
 
 
 ## Half the width, in metres, that the camera sees at the room's own depth.
