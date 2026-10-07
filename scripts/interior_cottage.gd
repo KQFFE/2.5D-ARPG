@@ -26,11 +26,14 @@ extends Node3D
 @export var room_half_width := 6.0
 ## How far in front of the room the camera sits, metres. Must match RoomCamera's
 ## own Z.
-@export var camera_distance := 18.0
+@export var camera_distance := 21.0
 ## The X of the side walls: the plane a doorway sits in.
 @export var wall_x := 6.0
-## How far inside the door an arriving player is placed, metres.
-@export var entry_inset := 1.4
+## How far inside the door an arriving player is placed, metres. Deliberately
+## most of the way in: landing right against the door wall leaves the player at
+## the very edge of the frame, or past it, and they have to walk in before the
+## character is even on screen.
+@export var entry_inset := 3.0
 
 @onready var _room_camera: Camera3D = $RoomCamera
 @onready var _exit_door: Area3D = $ExitDoor
@@ -41,6 +44,14 @@ extends Node3D
 func _ready() -> void:
 	_room_camera.make_current()
 	_room_camera.make_current.call_deferred()
+	# The view is levelled here, not only in the scene: an authored yaw swings the
+	# whole view sideways, which shifts one side wall - and the doorway sitting in
+	# it - clean off the screen, so the player had to walk into the middle of the
+	# room before they were visible. Straight down -Z keeps the framing symmetric
+	# and the whole room reads at once. The distance is applied too, so the pan
+	# maths below always agrees with where the camera actually is.
+	_room_camera.rotation = Vector3.ZERO
+	_room_camera.position.z = camera_distance
 	var payload := SceneRouter.consume()
 	var dir: Vector3 = payload.get("dir", Vector3.ZERO)
 	var side := _door_side(dir)

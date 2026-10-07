@@ -132,12 +132,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -11)
 
 [node name="Cottage3" parent="Structures" unique_id=597846622 instance=ExtResource("7_cottage")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -9)
+enterable = true
+interior_scene = "res://scenes/interior_cottage.tscn"
 
 [node name="Cottage4" parent="Structures" unique_id=1443188431 instance=ExtResource("7_cottage")]
 transform = Transform3D(-1, 0, -3.2584137e-07, 0, 1, 0, 3.2584137e-07, 0, -1, -14, 0, 13)
 
 [node name="Cottage5" parent="Structures" unique_id=973132979 instance=ExtResource("7_cottage")]
 transform = Transform3D(-1, 0, -3.2584137e-07, 0, 1, 0, 3.2584137e-07, 0, -1, 6, 0, 12)
+enterable = true
+interior_scene = "res://scenes/interior_house.tscn"
 
 [node name="Gate" parent="Structures" unique_id=794320177 instance=ExtResource("9_gate")]
 transform = Transform3D(3.1391647e-07, 0, 1, 0, 1, 0, -1, 0, 3.1391647e-07, 26, 0, 0)

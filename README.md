@@ -340,15 +340,27 @@ The vision's side-view segments: inside a building the view flattens to a side-o
 read and the room is walked left-to-right, like a platformer level. This is the
 project's first switch from the 3D village to that 2.5D mode.
 
-- `res://scenes/interior_cottage.tscn` is the first interior, reached through the
-  black doorhole of `Structures/Cottage1` (the north-west cottage). It is a 12x8 m
-  room - floor, back and side walls, ceiling, table, stool, shelf, chest and rug,
-  all primitives - lit by a warm hearth light and a cool one by the door.
-- `RoomCamera` is a `Camera3D` 18 m in front of the room at `fov 22` with a slight
-  downward pitch. That narrow field of view is what flattens the real 3D room into
-  a side-on view. `res://scripts/interior_cottage.gd` pans it along X to keep the
-  player framed and clamps the pan so it never looks past a side wall; a room
-  narrower than the view does not pan at all.
+- `res://scenes/interior_cottage.tscn` and `res://scenes/interior_house.tscn` are
+  the two interiors, reached through the black doorholes of `Structures/Cottage3`
+  (north-west) and `Structures/Cottage5` (north-east). Each is one room - floor,
+  back and side walls, ceiling plus furniture, all primitives - lit by a warm
+  hearth light and a cool one by the door. They differ in width, furniture and
+  lighting, so the two houses do not read as the same room.
+- **Which cottages can be entered is per instance, not baked into the shared
+  scene.** `res://structures/cottage.tscn` carries
+  `res://scripts/enterable_cottage.gd`, whose `enterable` and `interior_scene`
+  exports are set per instance in `village.tscn` - the same pattern as a lamp
+  post's `checkpoint_id`. An enterable cottage hides its brown `Door` and shows
+  the black `DoorHole`; a shut one does the opposite and switches its
+  `DoorTrigger.monitoring` OFF, so bumping a shut wall can never change scene.
+- `RoomCamera` is a `Camera3D` 21 m in front of the room at `fov 22`. That narrow
+  field of view is what flattens the real 3D room into a side-on view.
+  `res://scripts/interior_cottage.gd` levels it first - an authored yaw is only a
+  few degrees, but at that distance it swings the view far enough sideways to push
+  one side wall, and the doorway in it, clean off the screen - then pans it along
+  X to keep the player framed, clamped so it never looks past a side wall. An
+  arriving player is placed `entry_inset` inside the door rather than against it,
+  so they are on screen immediately instead of at the very edge of the frame.
 - **The doorway** is `res://scripts/door_trigger.gd`, an `Area3D` with a
   `target_scene` and a `leads_inside` flag that says which of its two jobs it does.
   - `leads_inside = true` (the cottage's `DoorTrigger`) fires as soon as the player

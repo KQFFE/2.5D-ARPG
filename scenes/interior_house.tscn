@@ -1,6 +1,6 @@
 [gd_scene load_steps=25 format=3]
 
-[ext_resource type="PackedScene" uid="uid://be1gfrx0jghvn" path="res://entities/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://entities/player/player.tscn" id="1_player"]
 [ext_resource type="Material" path="res://materials/wood.tres" id="2_wood"]
 [ext_resource type="Material" path="res://materials/wall.tres" id="3_wall"]
 [ext_resource type="Material" path="res://materials/beam.tres" id="4_beam"]
@@ -11,25 +11,25 @@
 
 [sub_resource type="Environment" id="Environment_interior"]
 background_mode = 1
-background_color = Color(0.05, 0.04, 0.06, 1)
+background_color = Color(0.04, 0.045, 0.06, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.55, 0.46, 0.4, 1)
-ambient_light_energy = 0.5
+ambient_light_color = Color(0.42, 0.46, 0.55, 1)
+ambient_light_energy = 0.42
 
 [sub_resource type="BoxMesh" id="BoxMesh_floor"]
-size = Vector3(13.2, 0.3, 8)
+size = Vector3(14, 0.3, 8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
-size = Vector3(13.2, 0.3, 8)
+size = Vector3(14, 0.3, 8)
 
 [sub_resource type="BoxMesh" id="BoxMesh_back"]
-size = Vector3(13.2, 6, 0.3)
+size = Vector3(14, 6, 0.3)
 
 [sub_resource type="BoxMesh" id="BoxMesh_side"]
 size = Vector3(0.3, 6, 8)
 
 [sub_resource type="BoxMesh" id="BoxMesh_ceiling"]
-size = Vector3(13.2, 0.3, 8)
+size = Vector3(14, 0.3, 8)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_doorway"]
 shader = ExtResource("9_fade")
@@ -47,46 +47,51 @@ shader_parameter/fade_softness = 0.35
 size = Vector3(0.12, 2.2, 1.4)
 
 [sub_resource type="BoxMesh" id="BoxMesh_rug"]
-size = Vector3(3, 0.02, 2)
+size = Vector3(3.6, 0.02, 2.4)
 
-[sub_resource type="BoxMesh" id="BoxMesh_table"]
-size = Vector3(1.8, 0.8, 1)
+[sub_resource type="BoxMesh" id="BoxMesh_bed"]
+size = Vector3(2.2, 0.5, 1.1)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_table"]
-size = Vector3(1.8, 0.8, 1)
+[sub_resource type="BoxShape3D" id="BoxShape3D_bed"]
+size = Vector3(2.2, 0.5, 1.1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_stool"]
-size = Vector3(0.5, 0.5, 0.5)
+[sub_resource type="BoxMesh" id="BoxMesh_crate"]
+size = Vector3(0.7, 0.7, 0.7)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_crate"]
+size = Vector3(0.7, 0.7, 0.7)
 
 [sub_resource type="BoxMesh" id="BoxMesh_shelf"]
-size = Vector3(2.4, 0.12, 0.5)
+size = Vector3(2.6, 0.12, 0.5)
 
-[sub_resource type="BoxMesh" id="BoxMesh_chest"]
-size = Vector3(0.9, 0.6, 0.55)
+[sub_resource type="BoxMesh" id="BoxMesh_pot"]
+size = Vector3(0.5, 0.6, 0.5)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_chest"]
-size = Vector3(0.9, 0.6, 0.55)
+[sub_resource type="BoxShape3D" id="BoxShape3D_pot"]
+size = Vector3(0.5, 0.6, 0.5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_exit"]
 size = Vector3(2.4, 2.4, 1.6)
 
-[node name="InteriorCottage" type="Node3D"]
+[node name="InteriorHouse" type="Node3D"]
 script = ExtResource("6_interior")
+room_half_width = 7.0
+wall_x = 7.0
 
 [node name="Environment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_interior")
 
 [node name="HearthLight" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 2.6, -1)
-light_color = Color(1, 0.72, 0.45, 1)
-light_energy = 3.2
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 2.6, -1)
+light_color = Color(1, 0.78, 0.5, 1)
+light_energy = 2.4
 omni_range = 9.0
 
 [node name="DoorLight" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6, 2.6, 0.5)
-light_color = Color(0.8, 0.85, 1, 1)
-light_energy = 1.6
-omni_range = 7.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.6, 2.6, 0.5)
+light_color = Color(0.72, 0.8, 1, 1)
+light_energy = 1.5
+omni_range = 7.5
 
 [node name="Room" type="Node3D" parent="."]
 
@@ -107,12 +112,12 @@ material_override = ExtResource("3_wall")
 mesh = SubResource("BoxMesh_back")
 
 [node name="SideWallLeft" type="MeshInstance3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 3, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 3, 0)
 material_override = ExtResource("3_wall")
 mesh = SubResource("BoxMesh_side")
 
 [node name="SideWallRight" type="MeshInstance3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3, 0)
 material_override = ExtResource("3_wall")
 mesh = SubResource("BoxMesh_side")
 
@@ -122,49 +127,55 @@ material_override = ExtResource("4_beam")
 mesh = SubResource("BoxMesh_ceiling")
 
 [node name="ExitDoorHole" type="MeshInstance3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.9, 1.1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.9, 1.1, 0)
 material_override = SubResource("ShaderMaterial_doorway")
 mesh = SubResource("BoxMesh_doorway")
 
 [node name="Rug" type="MeshInstance3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.01, -0.8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.01, -0.4)
 material_override = ExtResource("5_stone")
 mesh = SubResource("BoxMesh_rug")
 
-[node name="Table" type="StaticBody3D" parent="Room"]
+[node name="Bed" type="StaticBody3D" parent="Room"]
 
-[node name="Mesh" type="MeshInstance3D" parent="Room/Table"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.4, -1.2)
+[node name="Mesh" type="MeshInstance3D" parent="Room/Bed"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4, 0.25, -2)
 material_override = ExtResource("2_wood")
-mesh = SubResource("BoxMesh_table")
+mesh = SubResource("BoxMesh_bed")
 
-[node name="Collision" type="CollisionShape3D" parent="Room/Table"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.4, -1.2)
-shape = SubResource("BoxShape3D_table")
+[node name="Collision" type="CollisionShape3D" parent="Room/Bed"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4, 0.25, -2)
+shape = SubResource("BoxShape3D_bed")
 
-[node name="Stool" type="MeshInstance3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.25, -0.6)
+[node name="Crates" type="StaticBody3D" parent="Room"]
+
+[node name="Mesh" type="MeshInstance3D" parent="Room/Crates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.1, 0.35, -2.2)
 material_override = ExtResource("2_wood")
-mesh = SubResource("BoxMesh_stool")
+mesh = SubResource("BoxMesh_crate")
+
+[node name="Collision" type="CollisionShape3D" parent="Room/Crates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.1, 0.35, -2.2)
+shape = SubResource("BoxShape3D_crate")
 
 [node name="Shelf" type="MeshInstance3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6, 1.9, -2.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6, 1.9, -2.6)
 material_override = ExtResource("2_wood")
 mesh = SubResource("BoxMesh_shelf")
 
-[node name="Chest" type="StaticBody3D" parent="Room"]
+[node name="Pot" type="StaticBody3D" parent="Room"]
 
-[node name="Mesh" type="MeshInstance3D" parent="Room/Chest"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 0.3, -1.8)
-material_override = ExtResource("2_wood")
-mesh = SubResource("BoxMesh_chest")
+[node name="Mesh" type="MeshInstance3D" parent="Room/Pot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.3, 0.3, -2.2)
+material_override = ExtResource("5_stone")
+mesh = SubResource("BoxMesh_pot")
 
-[node name="Collision" type="CollisionShape3D" parent="Room/Chest"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 0.3, -1.8)
-shape = SubResource("BoxShape3D_chest")
+[node name="Collision" type="CollisionShape3D" parent="Room/Pot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.3, 0.3, -2.2)
+shape = SubResource("BoxShape3D_pot")
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6, 0.05, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.05, 0)
 
 [node name="RoomCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 21)
@@ -172,7 +183,7 @@ current = true
 fov = 22.0
 
 [node name="ExitDoor" type="Area3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 1.1, 0)
 script = ExtResource("7_door")
 target_scene = "res://main.tscn"
 leads_inside = false
