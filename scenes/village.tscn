@@ -359,13 +359,13 @@ transform = Transform3D(-0.3623577, 0, 0.9320391, 0, 1, 0, -0.9320391, 0, -0.362
 transform = Transform3D(0.9899925, 0, 0.14112, 0, 1, 0, -0.14112, 0, 0.9899925, 9.5, 0, 21.5)
 
 [node name="Goblin1" parent="Actors" unique_id=748141703 instance=ExtResource("5_goblin")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -6, 0, -34)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -34)
 
 [node name="Goblin2" parent="Actors" unique_id=1964188229 instance=ExtResource("5_goblin")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 8, 0, -48)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -48)
 
 [node name="Goblin3" parent="Actors" unique_id=1183670448 instance=ExtResource("5_goblin")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3, 0, -60)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -60)
 
 [node name="Herb" parent="Actors" unique_id=1489182128 instance=ExtResource("6_herb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -44)

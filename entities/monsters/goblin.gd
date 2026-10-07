@@ -188,12 +188,16 @@ func _is_facing_player(to_player: Vector3, dist: float) -> bool:
 	return _facing_dir().dot(to_player / dist) >= limit
 
 
-## Forward on the XZ plane, taken from the Visual's yaw. -Z is forward.
+## Forward on the XZ plane, taken from the Visual's WORLD yaw. -Z is forward.
+## World, not local, yaw: the swipe arc has to be measured against the same world
+## direction `to_player` uses, or a body node rotated in the scene puts the
+## damaging arc (and the art) a quarter turn off the player.
 func _facing_dir() -> Vector3:
 	var visual := get_node_or_null("Visual") as Node3D
 	if visual == null:
 		return Vector3(0.0, 0.0, -1.0)
-	return Vector3(-sin(visual.rotation.y), 0.0, -cos(visual.rotation.y))
+	var yaw := visual.global_rotation.y
+	return Vector3(-sin(yaw), 0.0, -cos(yaw))
 
 
 func _enter_attack(to_player: Vector3) -> void:
@@ -214,6 +218,11 @@ func _attack_tick(delta: float, player: Node3D, to_player: Vector3, dist: float)
 	_swing_time += delta
 	velocity = Vector3.ZERO
 	move_and_slide()
+	# Keep looking AT THE PLAYER for the whole swipe instead of locking onto the
+	# spot they stood in when it began, so circling behind does not walk out of
+	# the arc.
+	if to_player.length_squared() > 0.0001:
+		face_dir(to_player)
 	_update_swipe()
 
 	if not _hit_done and _swing_time >= hit_window_start and _swing_time <= hit_window_end:

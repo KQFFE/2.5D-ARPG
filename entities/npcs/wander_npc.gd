@@ -62,10 +62,15 @@ func _physics_process(delta: float) -> void:
 
 
 ## Turns the "Visual" child so its front (-Z) looks along dir (XZ only).
+##
+## The VISUAL's WORLD yaw is set, not its local rotation, so the art faces `dir`
+## no matter how the body node itself is rotated in the scene. A goblin, NPC or
+## sheep turned in the editor therefore still looks where it is walking instead
+## of off by that baked-in angle.
 func face_dir(dir: Vector3) -> void:
 	var flat := Vector3(dir.x, 0.0, dir.z)
 	if flat.length_squared() < 0.0001:
 		return
 	var visual := get_node_or_null("Visual")
 	if visual is Node3D:
-		(visual as Node3D).rotation.y = atan2(-flat.x, -flat.z)
+		(visual as Node3D).global_rotation = Vector3(0.0, atan2(-flat.x, -flat.z), 0.0)
