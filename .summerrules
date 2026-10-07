@@ -25,3 +25,14 @@
 - Structures that can hide the player fade via res://shaders/occluder_fade.gdshader,
   driven by res://scripts/occluder_fader.gd. The fade must stay a GPU-side screen-space
   circle with one uniform write per moved frame - no per-object scripts, traversal or raycasts.
+
+## World orientation
+- The village is authored north-up: -Z is north (the gate, screen-up), +Z is south (toward
+  the camera), +X is east, -X is west. The gate stands on the north edge of the village.
+- The world was turned 90 degrees left by rotating the groups (Structures, Dressing,
+  Checkpoints, plus the Lane and Fields meshes) rather than re-authoring every node, so a
+  transform written inside one of those groups is in that group's pre-turn frame: local +X
+  points at where the gate used to be (east), which is now world north. Do not hand-rotate a
+  new structure to compensate - place it and it turns with the group.
+- The fence run names (FenceN01, FenceE03, ...) date from the pre-turn layout and no longer
+  describe the side they sit on.

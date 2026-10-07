@@ -10,9 +10,18 @@ extends Node3D
 ##
 ## One manager per scene. A second scene that wants checkpoints just instances
 ## its own, or reuses res://structures/lamppost.tscn and this node.
+##
+## It also announces checkpoint_activated for every change of the active point,
+## which is how exactly one lamp post stays lit.
 
 const SAVE_PATH := "user://checkpoint.cfg"
 const SECTION := "checkpoint"
+
+## Emitted whenever the active checkpoint changes, so a lamp post can light up
+## only while it is the one. It also fires at startup for the point restored from
+## user://checkpoint.cfg - the posts are already listening by then, because a
+## child's _ready runs before its parent's.
+signal checkpoint_activated(id: String)
 
 var _id := ""
 var _position := Vector3.ZERO
@@ -22,6 +31,10 @@ var _has_checkpoint := false
 func _ready() -> void:
 	add_to_group("checkpoint_manager")
 	_load()
+	# A post restored from the save file lights up on a fresh start through this,
+	# exactly as it would if the player had just walked into it.
+	if _has_checkpoint:
+		checkpoint_activated.emit(_id)
 
 
 ## Called by a checkpoint post when the player walks into it. Records the point
@@ -31,6 +44,7 @@ func activate(id: String, position: Vector3) -> void:
 	_position = position
 	_has_checkpoint = true
 	_save()
+	checkpoint_activated.emit(_id)
 	print("Checkpoint saved: '%s' at %s" % [_id, str(_position)])
 
 

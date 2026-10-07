@@ -118,8 +118,17 @@ res://
 
 ## 4. World layout (`scenes/village.tscn`)
 
-Root `Village` (Node3D). Coordinates are metres; **+X = east (toward the gate),
--Z = north / screen-up, +Z = south / toward the camera.** Origin is village centre.
+Root `Village` (Node3D). Coordinates are metres; **+X = east, -X = west, -Z =
+north / screen-up, +Z = south / toward the camera.** Origin is village centre.
+The gate sits on the NORTH edge, straight up the screen from the player's spawn.
+
+The world was turned 90 degrees left (gate east -> gate north) by rotating the
+groups rather than by re-authoring every node: `Structures`, `Dressing` and
+`Checkpoints`, plus the `Lane` and `Fields` meshes, each carry a 90 degree Y
+rotation. A transform written *inside* one of those groups is therefore in the
+group's own pre-turn frame - its local +X still points at where the gate used to
+be (east), which is now world north. The fence run names (`FenceN01`, `FenceE03`,
+...) date from the pre-turn layout and no longer describe the side they sit on.
 
 - `WorldEnvironment` - procedural sky, warm ambient 0.45, tonemap filmic.
 - `Sun` (DirectionalLight3D) - warm 1.0/0.92/0.78, energy 1.15, shadows on with
@@ -127,12 +136,16 @@ Root `Village` (Node3D). Coordinates are metres; **+X = east (toward the gate),
   `directional_shadow_max_distance 70`.
 - `OccluderFader` - see section 11.
 - `Ground` (StaticBody3D) - 180x180 grass slab at y=0, with collision.
-- `Lane` - 52x4 dirt strip along X at z=0.
-- `Fields` - 50x50 darker green patch centred at x=55 (beyond the gate).
-- `Structures/` - `Cottage1..Cottage5`, `Gate` (x=26, spans the lane),
-  `Pen` (x=-25,z=12, holds the sheep), and fence runs `FenceN01..N12`,
-  `FenceS01..S12`, `FenceW01..W08`, `FenceE01..E06` forming the village boundary
-  with a gap at the east for the gate.
+- `Lane` - 52x4 dirt strip, now running north-south along Z at x=0 (centred
+  z=-2), so it leads straight from the village centre out through the gate.
+- `Fields` - 50x50 darker green patch centred at world (0, -55), north of the
+  gate.
+- `Structures/` - `Cottage1..Cottage5`, `Gate` (world 0, 0, -26: on the north
+  edge, spanning the lane), `Pen` (world -12, 0, -25, holds the sheep), and fence
+  runs `FenceN01..N12`, `FenceS01..S12`, `FenceW01..W08`, `FenceE01..E06`
+  forming the village boundary with the gap on the NORTH side for the gate.
+  Cottages 1-3 stand in a row west of centre, south of the lane; 4 and 5 are at
+  world (-13, -14) and (-12, 6).
 - `Dressing/` - library props: `BarrelA`, `BarrelB`, `BarrelsByPen`, `Bench`,
   `Anvil`, `Banner`, `Chest`, and a `Market` StaticBody3D holding `Cart` + `Stall`.
   `Dressing/Barrels` is a StaticBody3D holding the collision shapes for the
@@ -144,9 +157,10 @@ Root `Village` (Node3D). Coordinates are metres; **+X = east (toward the gate),
   `LampPostDeep` (section 10).
 - `UI` - the `dialogue_box.tscn` instance.
 
-Approximate actor placement: Player (0,6) spawn; Villager (-4,2); OldMan (9,7);
-Mother (-15,6); Child (-14,7); Sheep around (-28..-21, 9..14); Goblins at
-(34,-6), (48,8), (60,-3); Herb (44,4).
+Approximate actor placement (world x, z): Player (6,0) spawn; Villager (2,4);
+OldMan (-7,9); Mother (-6,-15); Child (-7,-14); Sheep inside the pen around
+(-14.5..-9.5, -28..-21.5); Goblins north of the gate at (6,34), (-8,48), (3,60);
+Herb (-4,44).
 
 ---
 
@@ -309,9 +323,9 @@ freed. Exports `herb_meta` and `spin_speed`.
 |---|---|---|
 | `cottage.tscn` | one cottage | StaticBody3D + walls/roof/door/two windows/chimney + a box collider. Instanced 5x. Uses the shared fade materials. |
 | `fence.tscn` | one 5 m fence run | three posts, two rails, box collider. Instanced ~38x for the boundary. Uses `wood_opaque.tres`. |
-| `gate.tscn` | the village gate | wooden gate spanning the lane at x=26. Uses the fade materials. |
+| `gate.tscn` | the village gate | wooden gate spanning the lane at world z=-26, the north edge. Uses the fade materials. |
 | `pen.tscn` | the sheep pen | a 10x10 enclosure built from fence instances, with an opening. |
-| `lamppost.tscn` | checkpoint lamp post | see section 10. |
+| `lamppost.tscn` | checkpoint lamp post | see section 10. The lantern stays dark until this post is the active save point. |
 
 > Fence and pen deliberately use `res://materials/wood_opaque.tres`, NOT the fade
 > shader: they are only 1.15 m tall, shorter than the player, so they must never
@@ -336,9 +350,25 @@ immediately on activation. Loads it again at startup, so the recorded point
 survives quitting. `respawn_position(fallback)` returns the fallback (where the
 village placed the player) until a checkpoint has actually been reached.
 
-**Placed posts:** `LampPostField` id `field_gate` at (36,0,7) - just outside the
-village on the field; `LampPostMid` id `field_mid` at (50,0,-8); `LampPostDeep`
-id `field_deep` at (64,0,12). The most recently reached post is the respawn.
+**Placed posts:** `LampPostField` id `field_gate` at world (36, 0, -7) - just
+north of the gate on the field; `LampPostMid` id `field_mid` at (-8, 0, 50);
+`LampPostDeep` id `field_deep` at (12, 0, 64). The most recently reached post is
+the respawn.
+
+**The lit lamp.** `res://scripts/lamppost.gd` extends `checkpoint.gd` and
+overrides its `set_lit()` hook, so the lamp post scene still carries ONE script:
+while this post is the active save point the lantern glass glows (emission on,
+albedo up) and its `Glow` OmniLight3D shines; as soon as another post takes over
+it goes back to dark glass with the light off. Exactly one lamp in the village
+burns at a time.
+The manager announces every change with the `checkpoint_activated(id)` signal -
+including the point it restores from `user://checkpoint.cfg` at startup, which is
+why the correct lamp is lit on a fresh boot rather than all of them dark (a
+child's `_ready` runs before its parent's, so the posts are already listening
+when the manager loads).
+Nothing is wired per instance: the `Lantern` mesh and `Glow` light are found by
+name, and the glass material is duplicated before it is touched, so the three
+posts never share one material.
 
 **Adding a post:** instance `lamppost.tscn` under `Checkpoints` and give it a
 unique `checkpoint_id`. Nothing else is needed - posts find the manager through

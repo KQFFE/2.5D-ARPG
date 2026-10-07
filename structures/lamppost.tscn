@@ -1,6 +1,6 @@
 [gd_scene load_steps=13 format=3]
 
-[ext_resource type="Script" path="res://scripts/checkpoint.gd" id="1_checkpoint"]
+[ext_resource type="Script" path="res://scripts/lamppost.gd" id="1_lamppost"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_iron"]
 albedo_color = Color(0.16, 0.16, 0.18, 1)
@@ -13,7 +13,6 @@ roughness = 1.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_glass"]
 albedo_color = Color(0.98, 0.78, 0.42, 1)
-emission_enabled = true
 emission = Color(1, 0.72, 0.34, 1)
 emission_energy_multiplier = 1.6
 roughness = 0.35
@@ -49,7 +48,7 @@ size = Vector3(0.36, 3.8, 0.36)
 radius = 4.0
 
 [node name="LampPost" type="StaticBody3D"]
-script = ExtResource("1_checkpoint")
+script = ExtResource("1_lamppost")
 
 [node name="Base" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
@@ -82,6 +81,7 @@ material_override = SubResource("StandardMaterial3D_iron")
 mesh = SubResource("CylinderMesh_finial")
 
 [node name="Glow" type="OmniLight3D" parent="."]
+visible = false
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.2, 0)
 light_color = Color(1, 0.78, 0.45, 1)
 light_energy = 0.7
