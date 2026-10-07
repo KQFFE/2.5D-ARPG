@@ -22,6 +22,13 @@ const SECTION := "save"
 ## choices travel with it (see res://scripts/game_settings.gd). Keys are
 ## arbitrary; an option this slot never set just reads back as its default.
 const OPTIONS_SECTION := "options"
+## Input bindings live in the slot too, for the same reason: a rebinding belongs
+## to the playthrough that made it, so changing Jump in one save never touches
+## another. Stored as one entry - action -> Array of event-data dictionaries, the
+## shape InputRemap builds. A slot that never rebound anything has no entry, which
+## reads back as the project defaults.
+const BINDINGS_SECTION := "bindings"
+const BINDINGS_KEY := "events"
 ## How many saved characters the Load screen lists, newest first.
 const MAX_LISTED := 5
 const PLACEHOLDER_NAME := "Unnamed"
@@ -30,6 +37,11 @@ const PLACEHOLDER_NAME := "Unnamed"
 ## respawns at the loaded point without a second codepath.
 const CHECKPOINT_PATH := "user://checkpoint.cfg"
 const CHECKPOINT_SECTION := "checkpoint"
+
+## Raised whenever the active slot changes - New Game or Load. InputRemap listens
+## and applies that playthrough's bindings, so the keys follow the save the player
+## is in instead of being global to the installation.
+signal active_slot_changed
 
 ## The slot this session reads and writes. Empty until New Game or Load.
 var active_slot_id := ""
@@ -73,8 +85,11 @@ func new_game() -> void:
 	active_slot_id = id
 	_pending_spawn = null
 	# A new playthrough starts on the defaults: nothing carries over from the
-	# previous character, including the options.
+	# previous character, including the options and the keys. The fresh slot
+	# records neither, and InputRemap re-reads the (empty) bindings when it hears
+	# active_slot_changed, which puts the game back on the project defaults.
 	_options_cache.clear()
+	active_slot_changed.emit()
 
 
 ## Records the respawn point in the active slot. The village calls this whenever
@@ -116,19 +131,22 @@ func save_active() -> void:
 ## nothing to do with the respawn point: a save made before the player ever
 ## reached a lamp post still has options, and returning early would silently lose
 ## them.
+## active_slot_changed is emitted on EVERY path out, including a slot file that
+## will not load: InputRemap re-reads the bindings from whichever slot is active,
+## and an unreadable slot has to reset the keys to the defaults rather than leave
+## the previous playthrough's bindings in place.
 func load_slot(id: String) -> void:
 	active_slot_id = id
 	_pending_spawn = null
 	var config := ConfigFile.new()
-	if config.load(_slot_path(id)) != OK:
-		return
-	_load_options_section(config)
-	if not bool(config.get_value(SECTION, "has_spawn", false)):
-		return
-	var position: Vector3 = config.get_value(SECTION, "position", Vector3.ZERO)
-	var checkpoint_id := String(config.get_value(SECTION, "checkpoint_id", ""))
-	_write_checkpoint_cfg(checkpoint_id, position)
-	_pending_spawn = position
+	if config.load(_slot_path(id)) == OK:
+		_load_options_section(config)
+		if bool(config.get_value(SECTION, "has_spawn", false)):
+			var position: Vector3 = config.get_value(SECTION, "position", Vector3.ZERO)
+			var checkpoint_id := String(config.get_value(SECTION, "checkpoint_id", ""))
+			_write_checkpoint_cfg(checkpoint_id, position)
+			_pending_spawn = position
+	active_slot_changed.emit()
 
 
 ## Loads the newest slot there is, if any.
@@ -181,6 +199,39 @@ func set_option(key: String, value: Variant) -> void:
 	var err := config.save(_slot_path(active_slot_id))
 	if err != OK:
 		push_warning("SaveGame: could not write option '%s' to slot '%s' (error %d)" % [key, active_slot_id, err])
+
+
+# --- Input bindings (stored in the slot) ------------------------------------
+
+## The input bindings this playthrough has rebound, as action -> Array of
+## event-data dictionaries. Empty means "nothing rebound here", which is the
+## project defaults - a brand new game, or a save made before any key was changed.
+func get_bindings() -> Dictionary:
+	if active_slot_id.is_empty():
+		return {}
+	var config := ConfigFile.new()
+	if config.load(_slot_path(active_slot_id)) != OK:
+		return {}
+	var stored: Variant = config.get_value(BINDINGS_SECTION, BINDINGS_KEY, {})
+	if stored is Dictionary:
+		return stored
+	return {}
+
+
+## Stores the bindings of the current session in the active slot. Called by
+## InputRemap after every rebind.
+##
+## Like set_option(), this deliberately does NOT touch "updated": rebinding a key
+## is not progress, so it must not reorder the Load list.
+func set_bindings(data: Dictionary) -> void:
+	if active_slot_id.is_empty():
+		return
+	var config := ConfigFile.new()
+	config.load(_slot_path(active_slot_id))
+	config.set_value(BINDINGS_SECTION, BINDINGS_KEY, data)
+	var err := config.save(_slot_path(active_slot_id))
+	if err != OK:
+		push_warning("SaveGame: could not write bindings to slot '%s' (error %d)" % [active_slot_id, err])
 
 
 # --- Listing ----------------------------------------------------------------

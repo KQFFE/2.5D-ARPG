@@ -565,18 +565,25 @@ listens to `dialogue_started` / `dialogue_ended` and freezes itself.
 
 ### `input_remap.gd` (autoload `InputRemap`)
 The single owner of bindings.
-- **Startup always uses the project defaults.** `_ready()` only runs
-  `_sanitize_defaults()`; it deliberately does NOT call `load_bindings()`, so an
-  in-game rebind is never permanent - relaunching the game comes back up on the
-  defaults. `load_bindings()` is kept for the future "apply" button that will
-  make an in-game change stick.
+- **Bindings live in the SAVE SLOT, not in a global file.** They are written into
+  the active slot's `[bindings]` section through `SaveGame.set_bindings()` /
+  `get_bindings()`, so rebinding Jump in one playthrough leaves every other save
+  untouched. There is no `user://input_bindings.cfg` any more.
+- **`active_slot_changed` is what re-reads them.** `SaveGame` emits that signal on
+  New Game and on Load; `_ready()` connects to it and calls `load_bindings()`, so
+  the keys follow whichever save the player is in.
 - `ACTIONS` - the ordered list of the 11 rebindable actions with display labels.
 - `rebind_action(action, event)` - replaces that action's events, removes the event
-  from any other game action using it (newest binding wins), then saves.
-- `save_bindings()` / `load_bindings()` - ConfigFile at
-  `user://input_bindings.cfg`. `save_bindings()` still runs on every rebind, but
-  `load_bindings()` is no longer called at startup (see the first bullet), so the
-  file is written and simply not read back yet.
+  from any other game action using it (newest binding wins), then saves to the slot.
+- `save_bindings()` - snapshots every action's events into the active slot.
+  `load_bindings()` - puts the InputMap back on the project defaults and then lays
+  the slot's snapshot over them, so a slot with nothing recorded simply ends up on
+  the defaults. That is what makes New Game a clean slate rather than a copy of the
+  playthrough the player was just in.
+- `_reset_to_defaults()` - the reset above, done with
+  `InputMap.load_from_project_settings()` and then `_sanitize_defaults()`, rather
+  than rebuilding the defaults by hand: a binding added to `project.godot` later is
+  then picked up automatically.
 - `binding_text(action)`, `event_to_text(event)`, `action_entries()` - used by the
   settings screen.
 - `_sanitize_defaults()` - runs BEFORE the saved bindings load, and drops
@@ -610,10 +617,14 @@ already formatted `YYYY/MM/DD HH:MM:SS` in local time), `format_datetime(unix)`,
 options: `option(key, default)` / `set_option(key, value)` read and write the
 slot's `[options]` section, backed by an in-memory map that stands in while no
 playthrough is active (the start screen's Settings page) and is cleared by
-`new_game()`. `set_option` never touches the slot's `updated` stamp, so changing
-an option cannot reorder the Load list. Loading writes the recorded point
-back into `user://checkpoint.cfg`, so the normal village respawn pipeline does the
-work instead of a second codepath.
+`new_game()`. The input bindings sit in the same slot, in its `[bindings]`
+section, through `get_bindings()` / `set_bindings()`. Neither `set_option` nor
+`set_bindings` touches the slot's `updated` stamp, so changing either cannot
+reorder the Load list. `new_game()` and `load_slot()` both emit
+`active_slot_changed`, which is how InputRemap learns to re-read the bindings for
+the playthrough now in effect. Loading writes the recorded point back into
+`user://checkpoint.cfg`, so the normal village respawn pipeline does the work
+instead of a second codepath.
 
 ### `scene_router.gd` (`class SceneRouter`)
 The hand-off between scenes across a doorway, held as **static state** rather than
@@ -956,10 +967,15 @@ so the loaded lamp lights and the player respawns there. The manager also places
 the player at that point on scene entry (deferred one frame, via
 `consume_pending_spawn()`), so Load starts you at your last lamp post.
 
-**Options live in the slot.** The same file carries an `[options]` section holding
-the player's settings - currently the HP / mana display position - so they are
-saved and loaded WITH the playthrough rather than globally. `save_active()` writes
-them out; `load_slot()` reads them back; a New Game slot has none, so the game
-comes up on the defaults. Changing an option never restamps the slot, so it does
-not make an old save look recent. `res://.summerrules` records the rule that every
+**Options and key bindings live in the slot.** The same file carries an `[options]`
+section holding the player's settings - currently the HP / mana display position -
+and a `[bindings]` section holding the rebound keys. Both are saved and loaded WITH
+the playthrough rather than globally, so rebinding Jump in one save leaves every
+other save, new or old, exactly as it was. `save_active()` writes the options out;
+`load_slot()` reads them back; a New Game slot has neither, so the game comes up on
+the defaults. Changing either never restamps the slot, so it does not make an old
+save look recent. `SaveGame` announces New Game and Load with its
+`active_slot_changed` signal, and that is what `InputRemap` listens to in order to
+re-read the bindings - without it the keys would still be whatever the previous
+playthrough left in the InputMap. `res://.summerrules` records the rule that every
 future setting is added the same way.

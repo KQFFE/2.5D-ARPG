@@ -5,13 +5,17 @@ extends Node
 ## (Input.is_action_pressed("dash")) and never reads raw keycodes or mouse /
 ## joypad button numbers, so rebinding stays purely an InputMap concern.
 ##
-## At startup _ready() cleans the project defaults in project.godot so one input
-## never drives two actions. In-game rebinds are NOT restored yet: the game
-## always comes up on the defaults, and save_bindings() / load_bindings() are ready
-## for the later "apply" button that will persist and restore them.
-
-const CONFIG_PATH := "user://input_bindings.cfg"
-const CONFIG_SECTION := "bindings"
+## Bindings are stored PER SAVE SLOT, never in a global file: they live in the
+## active slot's [bindings] section (res://scripts/save_game.gd), so rebinding
+## Jump in one playthrough cannot change another, and a New Game starts from the
+## project defaults because a fresh slot records no bindings at all.
+##
+## The active slot's bindings are applied whenever the slot changes - New Game or
+## Load - which SaveGame announces through its active_slot_changed signal. Until a
+## slot is active (the start screen) a rebind lives only for that session.
+##
+## Startup also cleans the project defaults in project.godot so one input never
+## drives two actions.
 
 ## Every rebindable action, in the order the settings screen lists them.
 const ACTIONS := [
@@ -41,12 +45,12 @@ const JOY_BUTTON_LABELS := {
 
 
 func _ready() -> void:
-	# Bindings always start from the project defaults in project.godot. In-game
-	# rebinds are deliberately NOT restored on startup yet: a saved-bindings
-	# "apply" flow is coming later, and load_bindings() is already there for it.
+	# Start from the project defaults, cleaned so one input never drives two
+	# actions. Whatever the active slot holds is applied when the slot changes.
 	_sanitize_defaults()
-
-
+	var store := _store()
+	if store != null and store.has_signal("active_slot_changed"):
+		store.connect("active_slot_changed", _on_active_slot_changed)
 ## The action list the settings screen builds its rows from, in display order.
 func action_entries() -> Array:
 	return ACTIONS.duplicate()
@@ -127,48 +131,74 @@ func rebind_action(action: String, event: InputEvent) -> bool:
 	return true
 
 
-## Writes every rebindable action's events to user://input_bindings.cfg.
+## Snapshot of the current bindings, written into the ACTIVE SLOT. Called after
+## every rebind, so the change survives even if the player never presses Save &
+## Quit. Does nothing on the start screen, where there is no slot yet.
 func save_bindings() -> void:
-	var config := ConfigFile.new()
-	for entry in ACTIONS:
-		var action := String(entry["action"])
-		if not InputMap.has_action(action):
-			continue
-		var stored: Array = []
-		for event in InputMap.action_get_events(action):
-			stored.append(_event_to_data(event))
-		config.set_value(CONFIG_SECTION, action, stored)
-	var err := config.save(CONFIG_PATH)
-	if err != OK:
-		push_warning("InputRemap: could not save bindings to %s (error %d)" % [CONFIG_PATH, err])
-
-
-## Reapplies the player's saved bindings. Until a save file exists the project
-## defaults from project.godot stay in place untouched.
-func load_bindings() -> void:
-	var config := ConfigFile.new()
-	if config.load(CONFIG_PATH) != OK:
+	var store := _store()
+	if store == null:
 		return
+	var data: Dictionary = {}
 	for entry in ACTIONS:
 		var action := String(entry["action"])
 		if not InputMap.has_action(action):
 			continue
-		var value: Variant = config.get_value(CONFIG_SECTION, action, null)
+		var events: Array = []
+		for event in InputMap.action_get_events(action):
+			events.append(_event_to_data(event))
+		data[action] = events
+	store.call("set_bindings", data)
+
+
+## Puts the active slot's bindings into the InputMap. A slot with nothing
+## recorded - a fresh New Game, or a save made before any key was changed - falls
+## back to the project defaults, so the previous playthrough's keys can never
+## leak into a new one.
+func load_bindings() -> void:
+	_reset_to_defaults()
+	var store := _store()
+	if store == null:
+		return
+	var data: Variant = store.call("get_bindings")
+	if data is Dictionary:
+		_apply_binding_data(data)
+
+
+## SaveGame raised active_slot_changed: New Game or Load. Re-read the bindings so
+## the keys follow the save the player is now in.
+func _on_active_slot_changed() -> void:
+	load_bindings()
+
+
+## Back to exactly what project.godot defines, then re-cleaned, so the fixed rules
+## (interact is E and gamepad Y, never Space) hold whatever the previous slot said.
+func _reset_to_defaults() -> void:
+	InputMap.load_from_project_settings()
+	_sanitize_defaults()
+
+
+## Applies one slot's stored bindings over the defaults. An action the slot has no
+## entry for keeps its default; an action stored with an EMPTY array is left
+## unbound, so a binding the player deliberately cleared stays cleared.
+func _apply_binding_data(data: Dictionary) -> void:
+	for entry in ACTIONS:
+		var action := String(entry["action"])
+		if not InputMap.has_action(action):
+			continue
+		var value: Variant = data.get(action, null)
 		if not (value is Array):
 			continue
 		var stored: Array = value
-		if stored.is_empty():
-			continue
-		var events: Array[InputEvent] = []
-		for data in stored:
-			var event := _data_to_event(data)
-			if event != null:
-				events.append(event)
-		if events.is_empty():
-			continue
 		InputMap.action_erase_events(action)
-		for event in events:
-			InputMap.action_add_event(action, event)
+		for item in stored:
+			var event := _data_to_event(item)
+			if event != null:
+				InputMap.action_add_event(action, event)
+
+
+## The SaveGame autoload. Resolved by path so this file stays loadable on its own.
+func _store() -> Node:
+	return get_node_or_null(^"/root/SaveGame")
 
 
 ## Cleans up the project defaults before any saved bindings are applied, so that

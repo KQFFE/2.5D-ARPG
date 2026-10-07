@@ -12,10 +12,12 @@
   (axis 0 for left/right, axis 1 for up/down) - never face buttons, which stay on
   actions. Interact is E only - Space is jump and must never double as interact, so
   jumping next to an NPC does not start dialogue.
-- Startup always uses the project defaults in project.godot: an in-game rebind is
-  not persisted yet. It lasts only for that session and the game comes back up on
-  the defaults. A later "apply" button will save the in-game changes (InputRemap
-  .save_bindings / .load_bindings already exist for it).
+- Input bindings are stored PER SAVE SLOT like every other setting, in the slot's
+  `[bindings]` section (res://scripts/save_game.gd, written through InputRemap's
+  set_bindings / get_bindings). Rebinding a key in one playthrough never changes
+  another, and New Game starts from the project defaults because a fresh slot
+  records none. SaveGame emits `active_slot_changed` on New Game and Load, which is
+  what makes InputRemap re-read the bindings. Never write a global bindings file.
 
 ## Structure
 - One entity per file: player, npcs, animals, monsters and props each live under
@@ -56,6 +58,8 @@
   not put a setting in project.godot.
 - Changing a setting is not progress: it must not touch the slot's "updated" stamp or
   otherwise reorder the Load list.
+- Input bindings follow the same rule as any other setting: the slot's `[bindings]`
+  section (see Input and controls), never a global bindings file.
 
 ## Collision layers
 - Layer 1 is the world and the player: ground, structures, props and the player body.
