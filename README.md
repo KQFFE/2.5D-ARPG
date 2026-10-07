@@ -318,8 +318,9 @@ covers every villager; variants are made by overriding exports per instance:
 is inside and presses `interact` it starts a dialogue. Override `get_lines()` in a
 subclass to change what is said.
 
-Village variants using `npc.tscn` directly: `OldMan`, `Mother`, `Child` - each
-just overrides name, colour, scale, lines and drift.
+Variants using `npc.tscn` directly: `OldMan`, `Mother`, `Child` in the village -
+each just overrides name, colour, scale, lines and drift - plus the `Elder`
+inside the top-left house (see section 9).
 
 **`villager.tscn` + `villager.gd`** - the fetch-quest giver (extends `npc.gd`).
 Overrides only `get_lines()`: if the player's `has_herb` meta is set she plays the
@@ -367,6 +368,14 @@ project's first switch from the 3D village to that 2.5D mode.
   back and side walls, ceiling plus furniture, all primitives - lit by a warm
   hearth light and a cool one by the door. They differ in width, furniture and
   lighting, so the two houses do not read as the same room.
+- **The top-left house has its elder.** `interior_cottage.tscn` instances
+  `res://entities/npcs/npc.tscn` as `Elder` - the vision's "old man too tired to
+  fight" - standing deeper in the room, with per-instance `speaker_name`,
+  `body_color`, `body_scale` and `lines` and a small `wander_radius` so he paces
+  about instead of walking into the walls. The interior also instances
+  `res://ui/dialogue_box.tscn` as `UI`: an interior is its own scene, so without
+  it the elder's lines would start a dialogue with nothing on screen to read or
+  dismiss.
 - **Which cottages can be entered is per instance, not baked into the shared
   scene.** `res://structures/cottage.tscn` carries
   `res://scripts/enterable_cottage.gd`, whose `enterable` and `interior_scene`
