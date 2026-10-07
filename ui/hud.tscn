@@ -1,0 +1,35 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://ui/orb.gd" id="2_orb"]
+
+[node name="HUD" type="CanvasLayer"]
+layer = 2
+script = ExtResource("1_hud")
+
+[node name="Orbs" type="GridContainer" parent="."]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -69.0
+offset_top = -98.0
+offset_right = 69.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+columns = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+
+[node name="HealthOrb" type="Control" parent="Orbs"]
+custom_minimum_size = Vector2(64, 64)
+mouse_filter = 2
+script = ExtResource("2_orb")
+
+[node name="ManaOrb" type="Control" parent="Orbs"]
+custom_minimum_size = Vector2(64, 64)
+mouse_filter = 2
+script = ExtResource("2_orb")
+fill_color = Color(0.16, 0.36, 0.82, 1)

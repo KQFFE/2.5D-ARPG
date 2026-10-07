@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://ui/settings_menu.gd" id="1_settings_menu"]
 [ext_resource type="StyleBoxFlat" path="res://ui/menu_style.tres" id="2_panel_style"]
 [ext_resource type="PackedScene" path="res://ui/settings_category.tscn" id="3_category"]
+[ext_resource type="PackedScene" path="res://ui/video_settings.tscn" id="4_video"]
 
 [node name="SettingsMenu" type="Control"]
 layout_mode = 3
@@ -102,5 +103,9 @@ text = "Back"
 focus_neighbor_top = NodePath("../Center/Panel/Content/InputButton")
 
 [node name="CategoryPage" parent="." instance=ExtResource("3_category")]
+unique_name_in_owner = true
+visible = false
+
+[node name="VideoPage" parent="." instance=ExtResource("4_video")]
 unique_name_in_owner = true
 visible = false

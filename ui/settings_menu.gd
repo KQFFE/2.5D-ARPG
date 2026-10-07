@@ -17,6 +17,7 @@ signal back_requested
 
 @onready var _list_page: Control = %ListPage
 @onready var _category_page: SettingsCategory = %CategoryPage
+@onready var _video_page: Control = %VideoPage
 @onready var _gameplay_button: Button = %GameplayButton
 @onready var _audio_button: Button = %AudioButton
 @onready var _video_button: Button = %VideoButton
@@ -30,10 +31,13 @@ var _last_category_button: Button = null
 func _ready() -> void:
 	_gameplay_button.pressed.connect(_open_category.bind("Gameplay", _gameplay_button))
 	_audio_button.pressed.connect(_open_category.bind("Audio", _audio_button))
-	_video_button.pressed.connect(_open_category.bind("Video", _video_button))
+	# Video is the one category with real options, so it opens its own page rather
+	# than the generic placeholder that Gameplay and Audio still share.
+	_video_button.pressed.connect(_open_video)
 	_input_button.pressed.connect(_open_input_bindings)
 	_back_button.pressed.connect(_go_up)
 	_category_page.back_requested.connect(_close_category_page)
+	_video_page.back_requested.connect(_close_category_page)
 	visible = false
 
 
@@ -54,7 +58,7 @@ func close() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	# While the rebind overlay is up it owns Escape and closes itself; while a
 	# category page is up, that page owns Escape and comes back here.
-	if not is_visible_in_tree() or _category_page.visible or _bindings_open:
+	if not is_visible_in_tree() or _category_page.visible or _video_page.visible or _bindings_open:
 		return
 	if event.is_action_pressed("ui_cancel"):
 		_go_up()
@@ -74,8 +78,18 @@ func _open_category(title: String, button: Button) -> void:
 	_category_page.open(title)
 
 
+## Video opens its own options page instead of the generic placeholder category.
+func _open_video() -> void:
+	if _bindings_open:
+		return
+	_last_category_button = _video_button
+	_list_page.visible = false
+	_video_page.open()
+
+
 func _close_category_page() -> void:
 	_category_page.close()
+	_video_page.visible = false
 	_list_page.visible = true
 	if visible and _last_category_button != null:
 		_last_category_button.grab_focus()

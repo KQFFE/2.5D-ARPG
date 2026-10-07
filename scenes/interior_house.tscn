@@ -7,6 +7,7 @@
 [ext_resource type="Material" path="res://materials/stone.tres" id="5_stone"]
 [ext_resource type="Script" uid="uid://bwqd4uyvvkgwx" path="res://scripts/interior_cottage.gd" id="6_interior"]
 [ext_resource type="Script" uid="uid://e1bxg22axvyo" path="res://scripts/door_trigger.gd" id="7_door"]
+[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="8_hud"]
 
 [sub_resource type="Environment" id="Environment_interior"]
 background_mode = 1
@@ -195,6 +196,8 @@ shape = SubResource("BoxShape3D_pot")
 
 [node name="Player" parent="." unique_id=1357361356 instance=ExtResource("1_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.05, 0)
+
+[node name="HUD" parent="." instance=ExtResource("8_hud")]
 
 [node name="RoomCamera" type="Camera3D" parent="." unique_id=1863711996]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 21)

@@ -106,7 +106,10 @@ res://
 	load_menu.tscn + load_menu.gd              Load: the newest save slots
 	settings_menu.tscn + settings_menu.gd      Gameplay/Audio/Video/Input + Back
 	settings_category.tscn + settings_category.gd  category page (placeholder)
+	video_settings.tscn + video_settings.gd    Video page: where the HP/mana display sits
 	pause_menu.tscn + pause_menu.gd            in-game menu (Save & Quit)
+	hud.tscn + hud.gd                          HP / mana orbs in play (section 5)
+	orb.gd                                     one liquid-filled orb gauge
 	menu_style.tres                            shared panel StyleBox (tres)
 
   shaders/  occluder_fade.gdshader
@@ -131,6 +134,11 @@ res://
 | `InputRemap` | `res://scripts/input_remap.gd` | binding store, save/load, de-dupe |
 | `SettingsScreen` | `res://ui/settings_screen.tscn` | rebind overlay behind Settings -> Input |
 | `SaveGame` | `res://scripts/save_game.gd` | save slots, listing, load (section 16) |
+
+`GameSettings` (`res://scripts/game_settings.gd`) is deliberately NOT an autoload.
+It is a static `class_name` with no instance, so `GameSettings.hud_position()`
+resolves anywhere without one - and registering an autoload for it would fail,
+because the script extends `RefCounted`, not `Node`.
 
 ---
 
@@ -190,7 +198,8 @@ OldMan (7,-9); Mother (6,15); Child (7,14); Sheep inside the fenced pen at
 **Scene:** `Player` (CharacterBody3D, **grounded motion mode**), children:
 `Visual` (Node3D, holds `Body` capsule + `Front` marker and rotates to face),
 `Collision` (CapsuleShape3D r0.35 h1.7), `CameraRig` (follow camera script),
-`Camera3D` (current, fov 55), `Health` (the shared Health component, max 5).
+`Camera3D` (current, fov 55), `Health` (the shared Health component, max 5),
+`Mana` (`res://scripts/mana.gd`, max 5 - the pool behind the blue orb).
 The body sits on collision layer 1 (the world layer) with mask 1|2 - see
 **Collision layers** below.
 
@@ -637,6 +646,63 @@ and `died`. `invulnerable` ignores damage.
 > target was "no longer alive", which made anything at 0 hp permanently immune.
 > `revive()` and the death flow exist because of that.
 
+### `mana.gd` (`class Mana`)
+The mana pool, deliberately shaped like `health.gd`: add it as a `Mana` child, set
+`max_mana`, read `current`. API: `spend(amount) -> bool` (refuses a cost the pool
+cannot cover, so mana can never be pushed negative), `restore(amount)`, `fill()`,
+`is_empty()`, `ratio()`. No ability has a cost yet, so the orb simply sits full.
+
+### `orb.gd` (`class Orb`)
+One liquid-filled glass gauge - the health and mana orbs. Drawn entirely in
+`_draw()`, so there is no texture and no shader to keep in sync at any window size.
+The liquid is the real chord of the circle below the fill line, not a rectangle
+clipped to it, and the rim is drawn over the polygon edge: the fill has no
+anti-aliasing of its own, and the rim hides that. `set_values(current, maximum)`
+is the whole API, and it redraws ONLY when the ratio actually changes, so a HUD may
+call it every frame for free. A drop flashes the liquid towards white
+(`flash_strength`, `flash_time`) so a hit reads even in a 64 px orb. The fill
+colour is per instance: red for health, blue for mana.
+
+### `hud.tscn` + `hud.gd` (instanced in every gameplay scene)
+The HP / mana display. A `CanvasLayer` on layer 2 - above the world, below the
+pause menu (5) and the rebind overlay (10) - holding a `GridContainer` of two
+`Orb`s. Where it sits is a player option (see `video_settings` below): `bottom`
+(the default) and `top` place the orbs side by side, `left` and `right` stack them
+with HP above mana. The rect is computed in `apply_position()` from one orb size
+and a margin rather than left to container growth, so all four placements are the
+same arithmetic.
+
+It is instanced in `scenes/village.tscn`, `scenes/interior_cottage.tscn` and
+`scenes/interior_house.tscn`, because a scene change replaces the whole tree and
+the display has to come along with whichever scene is playing. HP and mana are
+POLLED from the player's `Health` and `Mana` children - one comparison per orb per
+frame, and the orb only redraws when its ratio moves - which keeps this scene out
+of those two shared components entirely. `_bind_player()` runs once on entry, and
+again from `_process` only while a component is still missing, so a scene whose
+player arrives a frame late still ends up connected. The display hides itself
+while a dialogue is up, because the dialogue box owns the bottom of the screen.
+
+### `game_settings.gd` (`class GameSettings`)
+Options that belong to the installation rather than to a save slot - how the game
+looks and behaves, not what the player has done. Stored in `user://settings.cfg`
+beside the save slots and the checkpoint file. STATIC on purpose: there is one set
+of options for the whole game, so nothing needs an instance and nothing is
+autoloaded. The file is read once and cached; `set_*` writes straight back, so a
+choice survives a restart with no "apply" step. One option so far:
+`hud_position()` / `set_hud_position()`, with `normalize_hud_position()` as the
+gate - an unrecognised value (a hand-edited file, an option removed later) falls
+back to `bottom` instead of leaving the HUD with nowhere to go.
+
+### `video_settings.tscn` + `video_settings.gd` (`res://ui/`)
+The one category page with real options, used for Video in place of the generic
+placeholder. It holds the HP / mana display position as four toggle buttons in one
+`ButtonGroup`; picking one stores it through `GameSettings` and then calls
+`apply_position()` on every node in the `hud` group, so a change made from the
+pause menu moves the orbs immediately rather than on the next scene load. Escape
+and Back both emit `back_requested`, and this page handles Escape first because a
+child sees unhandled input before its parent - so the settings list never sees the
+event and cannot close the whole menu.
+
 ### `follow_camera_3d.gd`
 Fixed 3/4 follow rig. It only ever PITCHES - roll is hard-locked to 0 and it
 never yaws with the player - so the 3D world stays locked to the screen like a 2D
@@ -722,7 +788,8 @@ append the attribution lines to `res://LICENSES_SUMMER_ASSETS.md` if it exists.
 
 ## 14. Known gaps / good next steps
 
-- **No HUD.** Player health is not shown anywhere; it exists on the Health node.
+- **Nothing spends mana.** The pool and its orb exist, but no ability has a cost
+  yet, so the blue orb always sits full.
 - **No death feedback.** Death is a 0.4 s freeze and a teleport. No animation, no
   game-over screen, no invulnerability window after respawn.
 - **Goblins have no real AI** beyond wander/chase/swipe/retreat. No aggro tiers, no
@@ -737,7 +804,8 @@ append the attribution lines to `res://LICENSES_SUMMER_ASSETS.md` if it exists.
   The rest of the side-scrolling segments the vision calls for do not exist.
 - **No character naming.** Save slots are labelled "Unnamed" until a naming screen
   exists (section 16).
-- **Gameplay / Audio / Video settings are placeholders** - only Input does anything.
+- **Gameplay and Audio settings are placeholders.** Video is real now (the HP /
+  mana display position) and Input does rebinding.
 - **Only one enemy type** and one quest loop.
 - **The `[input]` section of `project.godot` contains duplicated events.** The
   editor's bind operation only appends and there is no remove; a raw text edit to
@@ -795,6 +863,16 @@ append the attribution lines to `res://LICENSES_SUMMER_ASSETS.md` if it exists.
   every key event, so the press opened it and the repeat events shut it again - it
   only stayed up while the key was held. It now ignores the toggle actions until
   every bound key is physically released.
+- **A brand-new `class_name` is not in the class cache yet.** `hud.gd` annotated its
+  two orb nodes with `Orb` - the `class_name` declared in `orb.gd`, written in the
+  same batch - and the engine refused to load `hud.gd` at all (`Could not find
+  type "Orb" in the current scope`) until the filesystem had been rescanned. One
+  unresolved global name took the whole display down with it. `hud.gd` now reaches
+  the orb and mana scripts through explicit `preload()` consts, so no global class
+  name can break it.
+- **A misplaced Control reports nothing.** Wrong anchors, or a gauge drawn outside
+  its rect, raise no error at all: the scene loads, `_process` runs, and the orb is
+  simply not where it should be. A HUD's position has to be seen, not asserted.
 
 ---
 
@@ -808,9 +886,12 @@ same scene; each raises `back_requested`, and Escape or the bottom-left Back
 button goes up one level.
 
 **Settings** `res://ui/settings_menu.tscn` is instanced by both the start screen
-and the pause menu. It lists Gameplay / Audio / Video / Input; the category pages
-are placeholders except Input, which opens the `SettingsScreen` overlay - the
-rebind list driven by the `InputRemap` autoload.
+and the pause menu. It lists Gameplay / Audio / Video / Input. Gameplay and Audio
+open the generic placeholder page; Video opens `video_settings.tscn` (the HP /
+mana display position); Input opens the `SettingsScreen` overlay - the rebind list
+driven by the `InputRemap` autoload. A page opened from the pause menu applies to
+the running game immediately, because pausing keeps the tree alive: picking a new
+display position moves the orbs without a scene reload.
 
 **In-game menu** `res://ui/pause_menu.tscn`, instanced by `res://main.tscn` so it
 only exists while playing. From the top: "Save & Quit", then "Settings". It opens
