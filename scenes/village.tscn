@@ -22,6 +22,7 @@
 [ext_resource type="Script" uid="uid://cust64sb6anh4" path="res://scripts/occluder_fader.gd" id="20_fader"]
 [ext_resource type="PackedScene" path="res://structures/lamppost.tscn" id="21_lamppost"]
 [ext_resource type="Script" uid="uid://ckqyiucaqrf2" path="res://scripts/checkpoint_manager.gd" id="21_v3dlt"]
+[ext_resource type="Script" uid="uid://bq43lk6ahohe0" path="res://scripts/entry_spawn.gd" id="23_kbuqd"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_village"]
 sky_top_color = Color(0.42, 0.56, 0.76, 1)
@@ -383,3 +384,6 @@ checkpoint_id = "field_mid"
 [node name="LampPostDeep" parent="Checkpoints" unique_id=1807152022 instance=ExtResource("21_lamppost")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 0, 12)
 checkpoint_id = "field_deep"
+
+[node name="EntrySpawn" type="Node" parent="." unique_id=1319968111]
+script = ExtResource("23_kbuqd")

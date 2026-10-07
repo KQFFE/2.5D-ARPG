@@ -350,20 +350,34 @@ project's first switch from the 3D village to that 2.5D mode.
   player framed and clamps the pan so it never looks past a side wall; a room
   narrower than the view does not pan at all.
 - **The doorway** is `res://scripts/door_trigger.gd`, an `Area3D` with a
-  `target_scene` and a `target_spawn`. One script covers both directions: the
-  village cottage's `DoorTrigger` sends the player into the interior, and the
-  interior's `ExitDoor` sends them back out just south of that cottage door.
-- `res://scripts/scene_router.gd` (`class_name SceneRouter`) carries the arrival
-  position across the scene change as static state, so no autoload was needed and
-  `project.godot` is untouched. `res://scripts/entry_spawn.gd` is the plain `Node`
-  that consumes it, one frame later, so it wins over the scene's own default spawn.
+  `target_scene` and a `leads_inside` flag that says which of its two jobs it does.
+  - `leads_inside = true` (the cottage's `DoorTrigger`) fires as soon as the player
+    touches it - the building wall stops them at the door anyway - and remembers
+    the spot just outside plus the direction they were moving.
+  - `leads_inside = false` (the interior's `ExitDoor`) fires only when the player
+    is HEADING OUT, moving along its `outward`. Touching the doorway from the deep
+    side does nothing, so brushing past it is not mistaken for leaving. It needs no
+    run-up: the room's own wall is what the player walks into.
+- **Which wall the interior door sits on comes from the way the player came in**,
+  not from the room's own layout. `interior_cottage.gd` reads the travel direction
+  out of the payload and moves `ExitDoor`, `ExitDoorHole` and `DoorLight` onto that
+  wall (setting `outward` to match), so walking on carries the player deeper into
+  the house and turning back takes them out the way they came.
+- **Leaving puts the player beside the door they used**, not at a scene spawn. The
+  exit builds its arrival from the doorway remembered on the way in -
+  `exit_clearance` beyond it, plus `lateral_clearance` to the opposite side when the
+  player left sideways - and hands it to `res://scripts/entry_spawn.gd` in the
+  village, which applies it one frame later.
+- `res://scripts/scene_router.gd` (`class_name SceneRouter`) carries that payload
+  across the scene change as static state, so no autoload was needed and
+  `project.godot` is untouched.
 - The cottage's `DoorHole` uses the fade shader with a near-black albedo, so it
   fades along with the rest of the cottage when the player walks behind it.
 
-> A door trigger sits IN the doorway, so a scene that returns the player must
-> place them clear of the trigger or they bounce straight back through it. The
-> village spawn is about a metre south of the cottage's trigger box, and the
-> interior spawn about a metre east of its exit box.
+> A door trigger sits IN the doorway, so the arrival point has to be clear of the
+> trigger box or the player bounces straight back through it. The interior enters
+> the player 1.4 m inside its door, and the village arrival lands 1.2 m beyond the
+> cottage doorway - clear of a box that is only 1 m deep.
 
 ---
 
@@ -555,7 +569,8 @@ append the attribution lines to `res://LICENSES_SUMMER_ASSETS.md` if it exists.
   `player_controller.gd` already drives an `AnimatedSprite3D` named
   `AnimatedSprite3D` with `walk_<dir>` / `idle_<dir>` clips if you add one, with
   no code changes.
-- **No interiors or side-scrolling segments** yet, which the vision calls for.
+- **Only one interior** so far (the cottage behind Cottage1). The rest of the
+  side-scrolling segments the vision calls for do not exist yet.
 - **Only one enemy type** and one quest loop.
 - **The `[input]` section of `project.godot` contains duplicated events.** The
   editor's bind operation only appends and there is no remove; a raw text edit to
