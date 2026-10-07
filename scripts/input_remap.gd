@@ -5,9 +5,10 @@ extends Node
 ## (Input.is_action_pressed("dash")) and never reads raw keycodes or mouse /
 ## joypad button numbers, so rebinding stays purely an InputMap concern.
 ##
-## This singleton is the single startup hook for saved bindings: _ready()
-## reloads user://input_bindings.cfg before the first scene runs, and it is the
-## only place that writes bindings back to disk.
+## At startup _ready() cleans the project defaults in project.godot so one input
+## never drives two actions. In-game rebinds are NOT restored yet: the game
+## always comes up on the defaults, and save_bindings() / load_bindings() are ready
+## for the later "apply" button that will persist and restore them.
 
 const CONFIG_PATH := "user://input_bindings.cfg"
 const CONFIG_SECTION := "bindings"
@@ -40,8 +41,10 @@ const JOY_BUTTON_LABELS := {
 
 
 func _ready() -> void:
+	# Bindings always start from the project defaults in project.godot. In-game
+	# rebinds are deliberately NOT restored on startup yet: a saved-bindings
+	# "apply" flow is coming later, and load_bindings() is already there for it.
 	_sanitize_defaults()
-	load_bindings()
 
 
 ## The action list the settings screen builds its rows from, in display order.
@@ -264,7 +267,13 @@ func _data_to_event(data: Variant) -> InputEvent:
 			var key := InputEventKey.new()
 			key.keycode = code
 			key.physical_keycode = physical
-			key.set_modifiers_mask(int(info.get("mods", 0)))
+			# InputEventWithModifiers exposes only get_modifiers_mask(); the mask
+			# is restored through the individual flag properties.
+			var mods := int(info.get("mods", 0))
+			key.shift_pressed = (mods & KEY_MASK_SHIFT) != 0
+			key.ctrl_pressed = (mods & KEY_MASK_CTRL) != 0
+			key.alt_pressed = (mods & KEY_MASK_ALT) != 0
+			key.meta_pressed = (mods & KEY_MASK_META) != 0
 			key.pressed = false
 			return key
 		"mouse_button":

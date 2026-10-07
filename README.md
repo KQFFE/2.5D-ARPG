@@ -158,9 +158,9 @@ be (east), which is now world north. The fence run names (`FenceN01`, `FenceE03`
 - `UI` - the `dialogue_box.tscn` instance.
 
 Approximate actor placement (world x, z): Player (6,0) spawn; Villager (2,4);
-OldMan (-7,9); Mother (-6,-15); Child (-7,-14); Sheep inside the pen around
-(-14.5..-9.5, -28..-21.5); Goblins north of the gate at (6,34), (-8,48), (3,60);
-Herb (-4,44).
+OldMan (-7,9); Mother (-6,-15); Child (-7,-14); Sheep inside the fenced pen
+around (9..15, -27..-22); Goblins north of the gate, out in the field, at
+(34,-6), (48,8), (60,-3); Herb (44,4) - the quest item is out in the field too.
 
 ---
 
@@ -350,10 +350,10 @@ immediately on activation. Loads it again at startup, so the recorded point
 survives quitting. `respawn_position(fallback)` returns the fallback (where the
 village placed the player) until a checkpoint has actually been reached.
 
-**Placed posts:** `LampPostField` id `field_gate` at world (36, 0, -7) - just
-north of the gate on the field; `LampPostMid` id `field_mid` at (-8, 0, 50);
-`LampPostDeep` id `field_deep` at (12, 0, 64). The most recently reached post is
-the respawn.
+**Placed posts:** `LampPostField` id `field_gate` at world (7, 0, 36) - just
+north of the gate, out on the field; `LampPostMid` id `field_mid` at (50, 0, 8);
+`LampPostDeep` id `field_deep` at (64, 0, -12). All three sit in the field beyond
+the gate. The most recently reached post is the respawn.
 
 **The lit lamp.** `res://scripts/lamppost.gd` extends `checkpoint.gd` and
 overrides its `set_lit()` hook, so the lamp post scene still carries ONE script:
@@ -392,6 +392,11 @@ listens to `dialogue_started` / `dialogue_ended` and freezes itself.
 
 ### `input_remap.gd` (autoload `InputRemap`)
 The single owner of bindings.
+- **Startup always uses the project defaults.** `_ready()` only runs
+  `_sanitize_defaults()`; it deliberately does NOT call `load_bindings()`, so an
+  in-game rebind is never permanent - relaunching the game comes back up on the
+  defaults. `load_bindings()` is kept for the future "apply" button that will
+  make an in-game change stick.
 - `ACTIONS` - the ordered list of the 11 rebindable actions with display labels.
 - `rebind_action(action, event)` - replaces that action's events, removes the event
   from any other game action using it (newest binding wins), then saves.
@@ -532,6 +537,12 @@ append the attribution lines to `res://LICENSES_SUMMER_ASSETS.md` if it exists.
 - **Bind operation appends.** `InputMapBind` adds events and never removes, so
   binding the same action twice duplicates it.
 - **`interact` must never include Space.** Space is jump.
+- **`InputEventKey` has no `set_modifiers_mask()`.** `InputEventWithModifiers`
+  exposes only `get_modifiers_mask()`; a saved binding's modifiers are restored
+  through `shift_pressed` / `ctrl_pressed` / `alt_pressed` / `meta_pressed`. The
+  old call in `input_remap.gd` threw "Invalid call. Nonexistent function" inside
+  the `InputRemap` autoload's `_ready`, so the game errored on every startup that
+  had a saved `user://input_bindings.cfg`.
 - **The `.tscn` parser refuses a NodePath inside `Array[Object]`.** Use
   `Array[NodePath]` and resolve in `_ready`.
 - **Transparent materials need `depth_draw_always`** or their own parts z-fight at

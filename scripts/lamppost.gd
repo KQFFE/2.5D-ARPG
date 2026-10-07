@@ -1,73 +1,57 @@
 extends "res://scripts/checkpoint.gd"
-## The lamp look for a checkpoint lamp post - lit only while THIS post is the
-## active save point.
+## Lantern look for a checkpoint lamp post. It narrows the marker script rather
+## than replacing it: res://structures/lamppost.tscn carries only this one
+## script, and everything generic (walk-in detection, id, respawn position,
+## manager lookup) still comes from res://scripts/checkpoint.gd.
 ##
-## All the saving behaviour is inherited from res://scripts/checkpoint.gd; this
-## script adds nothing but the lantern. The base post calls set_lit(true) when the
-## player reaches it, and set_lit(false) when another post takes over (the manager
-## announces every change, including the point it restores from the save file at
-## startup), so exactly one lamp in the village burns and it is always the one the
-## player would respawn at.
+## Only the ACTIVE checkpoint burns. On _ready the post goes dark and listens
+## for the manager's `checkpoint_activated`, so exactly one lamp in the village
+## is lit - the one the player most recently saved at - and every other post is
+## dark.
 ##
-## Nothing needs wiring on an instance: the "Lantern" MeshInstance3D and the
-## "Glow" OmniLight3D child are found by name, and the lantern's own material is
-## duplicated before it is touched so the three posts never share one material.
-##
-## Exports:
-##   lit_color      colour the lantern glass glows with
-##   lit_emission   emission strength while lit
-##   dark_factor    how far the glass is darkened while unlit
+## Tune the look from the Inspector (lit_color, lit_emission, dark_factor).
 
-## Colour the lantern glass glows with when the post is lit.
+## Emission colour of the lantern glass while this post is active.
 @export var lit_color := Color(1.0, 0.72, 0.34, 1.0)
-## Emission strength while lit.
+## Emission strength while lit. 0 turns the glow off entirely on a dark post.
 @export var lit_emission := 1.6
-## How far the glass is darkened while unlit (1.0 = unchanged, 0.0 = black).
+## How dark the glass goes when the post is NOT the active one. 0.22 keeps a
+## faint tint so the lantern still reads as glass rather than a flat black box.
 @export var dark_factor := 0.22
 
-var _glass: StandardMaterial3D = null
+var _lantern: MeshInstance3D = null
 var _glow: OmniLight3D = null
-var _lit_albedo := Color(1.0, 1.0, 1.0, 1.0)
-var _dark_albedo := Color(0.0, 0.0, 0.0, 1.0)
+var _glass: StandardMaterial3D = null
 var _lit := false
 
 
-## Cache the lantern pieces BEFORE the base class runs, because the base calls
-## set_lit(false) as its first act.
 func _ready() -> void:
-	var lantern := get_node_or_null("Lantern") as MeshInstance3D
-	if lantern != null:
-		var source := lantern.material_override as StandardMaterial3D
-		if source == null:
-			source = lantern.get_active_material(0) as StandardMaterial3D
-		if source != null:
-			_glass = source.duplicate() as StandardMaterial3D
-			_lit_albedo = _glass.albedo_color
-			_dark_albedo = Color(
-				_lit_albedo.r * dark_factor,
-				_lit_albedo.g * dark_factor,
-				_lit_albedo.b * dark_factor,
-				_lit_albedo.a
-			)
-			lantern.material_override = _glass
-	_glow = get_node_or_null("Glow") as OmniLight3D
 	super._ready()
+	_lantern = get_node_or_null("Lantern") as MeshInstance3D
+	_glow = get_node_or_null("Glow") as OmniLight3D
+	if _lantern == null or _glow == null:
+		push_warning("LampPost: needs both a 'Lantern' MeshInstance3D and a 'Glow' OmniLight3D.")
 
 
-## Lit: the glass glows and the OmniLight3D shines. Unlit: dark glass, no light.
+## Lit look. checkpoint.gd calls this on _ready (dark) and whenever the manager
+## announces the active checkpoint changed.
 func set_lit(value: bool) -> void:
 	_lit = value
-	if _glass != null:
-		if value:
-			_glass.albedo_color = _lit_albedo
-			_glass.emission_enabled = true
-			_glass.emission = lit_color
-			_glass.emission_energy_multiplier = lit_emission
-		else:
-			_glass.albedo_color = _dark_albedo
-			_glass.emission_enabled = false
 	if _glow != null:
 		_glow.visible = value
+	if _lantern == null:
+		return
+	if _glass == null:
+		var source := _lantern.get_active_material(0)
+		if source is StandardMaterial3D:
+			_glass = (source as StandardMaterial3D).duplicate() as StandardMaterial3D
+			_lantern.material_override = _glass
+	if _glass == null:
+		return
+	_glass.emission_enabled = true
+	_glass.emission = lit_color
+	_glass.emission_energy_multiplier = lit_emission if value else 0.0
+	_glass.albedo_color = lit_color if value else Color(lit_color.r * dark_factor, lit_color.g * dark_factor, lit_color.b * dark_factor, 1.0)
 
 
 func is_lit() -> bool:

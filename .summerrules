@@ -12,6 +12,10 @@
   (axis 0 for left/right, axis 1 for up/down) - never face buttons, which stay on
   actions. Interact is E only - Space is jump and must never double as interact, so
   jumping next to an NPC does not start dialogue.
+- Startup always uses the project defaults in project.godot: an in-game rebind is
+  not persisted yet. It lasts only for that session and the game comes back up on
+  the defaults. A later "apply" button will save the in-game changes (InputRemap
+  .save_bindings / .load_bindings already exist for it).
 
 ## Structure
 - One entity per file: player, npcs, animals, monsters and props each live under

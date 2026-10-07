@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ompkjpnmhrev"]
 
-[ext_resource type="PackedScene" path="res://scenes/village.tscn" id="1_village"]
+[ext_resource type="PackedScene" uid="uid://dq76cy2hu0gmm" path="res://scenes/village.tscn" id="1_village"]
 
 [node name="Main" type="Node3D" unique_id=1169127206]
 
