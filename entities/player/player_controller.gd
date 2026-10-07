@@ -32,6 +32,18 @@ extends CharacterBody3D
 @export var gravity := 24.0
 @export var jump_velocity := 7.0
 
+@export_group("Side view")
+## When true the player moves ONLY along world X and is held at `lane_z`. An
+## interior room turns this on as the player enters, so a house is a pure 2.5D
+## left-to-right space: move_up / move_down do nothing, and the player never
+## drifts towards or away from the camera - which is what used to walk them
+## behind the furniture. The village leaves it false, so outdoor movement keeps
+## all four directions.
+@export var side_view := false
+## The Z the player is held at while `side_view` is true, in world metres. Must
+## match the lane the room's props and NPCs sit on.
+@export var lane_z := 0.0
+
 @export_group("Dash")
 @export var dash_speed := 16.0
 @export var dash_duration := 0.18
@@ -211,6 +223,26 @@ func set_facing(dir: Vector3) -> void:
 	_update_animation(false)
 
 
+## Sets the movement mode. An interior calls this with `true` on entry (see
+## res://scripts/interior_cottage.gd); the village never calls it, so outdoor
+## movement keeps all four directions.
+func set_side_view(value: bool, lane: float = 0.0) -> void:
+	side_view = value
+	lane_z = lane
+	if side_view:
+		global_position.z = lane_z
+		velocity.z = 0.0
+
+
+## The movement direction the player is asking for this frame, on the XZ plane.
+## In side view only X counts, so move_up / move_down do nothing.
+func _input_dir() -> Vector3:
+	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if side_view:
+		return Vector3(input.x, 0.0, 0.0)
+	return Vector3(input.x, 0.0, input.y)
+
+
 func _physics_process(delta: float) -> void:
 	_tick_timers(delta)
 	# Dead: frozen at zero health until the pause elapses, then wake up.
@@ -241,8 +273,9 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("dash") and _dash_cd <= 0.0 and _dash_time <= 0.0:
 		_start_dash()
 
-	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	var dir := Vector3(input.x, 0.0, input.y)
+	# Movement is projected onto the current mode: all four directions outdoors,
+	# left/right only inside a house (side_view).
+	var dir := _input_dir()
 
 	if _dash_time > 0.0:
 		velocity.x = _dash_dir.x * dash_speed
@@ -263,6 +296,10 @@ func _physics_process(delta: float) -> void:
 		var shove := parry_knockback_distance / maxf(parry_knockback_time, 0.001)
 		velocity.x = _parry_knock_dir.x * shove
 		velocity.z = _parry_knock_dir.z * shove
+	# In side view nothing may push the player off the lane: a parry shove, a hit
+	# or a collision all resolve along X only.
+	if side_view:
+		velocity.z = 0.0
 	move_and_slide()
 	_update_animation(moving and _dash_time <= 0.0)
 
@@ -283,8 +320,7 @@ func _tick_timers(delta: float) -> void:
 
 
 func _start_dash() -> void:
-	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	var dir := Vector3(input.x, 0.0, input.y)
+	var dir := _input_dir()
 	if dir.length_squared() < 0.0001:
 		dir = facing_dir()
 	_dash_dir = dir.normalized()

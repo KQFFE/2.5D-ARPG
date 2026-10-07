@@ -12,6 +12,11 @@ extends CharacterBody3D
 @export var wander_radius := 3.0
 @export var pause_min := 1.8
 @export var pause_max := 3.6
+## When true this actor walks ONLY along world X and is held at its spawn Z, so
+## it stays on the room's single 2.5D lane instead of drifting behind the
+## furniture. An interior turns it on for its NPCs (see
+## res://scripts/interior_cottage.gd); the village leaves it false.
+@export var side_view := false
 
 var _home := Vector3.ZERO
 var _target := Vector3.ZERO
@@ -36,10 +41,27 @@ func _on_dialogue_ended() -> void:
 
 
 func _pick_target() -> void:
-	var angle := randf() * TAU
 	var dist := randf_range(wander_radius * 0.3, wander_radius)
-	_target = _home + Vector3(cos(angle), 0.0, sin(angle)) * dist
+	if side_view:
+		# Side view: only left and right, so the actor stays on the lane.
+		_target = _home + Vector3(1.0 if randf() < 0.5 else -1.0, 0.0, 0.0) * dist
+	else:
+		var angle := randf() * TAU
+		_target = _home + Vector3(cos(angle), 0.0, sin(angle)) * dist
 	_timer = randf_range(pause_min, pause_max)
+
+
+## Puts this actor on a room's 2.5D lane: from here it only walks along world X
+## and is held at `lane`. An interior calls this on its NPCs on entry.
+func set_side_view(value: bool, lane: float = 0.0) -> void:
+	side_view = value
+	if not side_view:
+		return
+	global_position.z = lane
+	_home = global_position
+	_target = _home
+	velocity = Vector3.ZERO
+	_pick_target()
 
 
 func _physics_process(delta: float) -> void:

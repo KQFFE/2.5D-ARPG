@@ -391,6 +391,16 @@ project's first switch from the 3D village to that 2.5D mode.
   X to keep the player framed, clamped so it never looks past a side wall. An
   arriving player is placed `entry_inset` inside the door rather than against it,
   so they are on screen immediately instead of at the very edge of the frame.
+- **Movement is left/right only inside a house.** On entry
+  `interior_cottage.gd` switches the room into side view: the player
+  (`set_side_view` in `player_controller.gd`) and every NPC in the room
+  (`set_side_view` in `wander_npc.gd`) then move ONLY along world X, held on the
+  single `lane_z`. That is what stops the elder drifting behind the table or a
+  wall now that the room is a side-on space. Only `move_left` / `move_right`
+  move the player - `move_up` / `move_down` do nothing - and the dash is
+  horizontal too. The village never switches this on, so outdoor movement keeps
+  all four directions. The room walks its own nodes looking for `set_side_view`
+  rather than using a group, because `npc.tscn` is not in an `"npc"` group.
 - **The room shell is solid.** `Floor`, `BackWall`, `SideWallLeft` and
   `SideWallRight` are each a `StaticBody3D` with a `MeshInstance3D` and a matching
   `CollisionShape3D` child, so the player is stopped by every wall and can only
@@ -585,7 +595,9 @@ Shared by both interiors (`interior_house.tscn` overrides `room_half_width` and
 `wall_x`). Levels the `RoomCamera`, pans it along X with a clamp so it never looks
 past a side wall, reads the arrival direction out of the payload to choose which
 wall the door sits on, and places the player - position plus facing - just inside
-that door. Exports `room_half_width`, `wall_x`, `camera_distance`, `entry_inset`.
+that door. Exports `room_half_width`, `wall_x`, `camera_distance`, `entry_inset`,
+`lane_z`. On entry it also switches the room into 2.5D movement by calling
+`set_side_view` on the player and on every NPC it owns (see section 9).
 
 ### `health.gd` (`class Health`)
 The one health implementation, shared by the player and every enemy. Add it as a

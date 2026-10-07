@@ -34,6 +34,10 @@ extends Node3D
 ## room. Landing near the door wall is safe now that the camera below is
 ## levelled: the whole room width stays on screen, door wall included.
 @export var entry_inset := 1.0
+## The Z the room's single lane sits on, in world metres. The player and every
+## NPC in the room are held at it, so a house is a pure 2.5D left-to-right space
+## and nothing drifts towards or away from the camera.
+@export var lane_z := 0.0
 
 @onready var _room_camera: Camera3D = $RoomCamera
 @onready var _exit_door: Area3D = $ExitDoor
@@ -59,6 +63,9 @@ func _ready() -> void:
 	# `dir` is carried on, so the player keeps facing the way they walked in -
 	# deeper into the room - rather than snapping to the scene's default facing.
 	_place_player.call_deferred(side, dir)
+	# Deferred, so it runs AFTER _place_player above has set the spawn: the lane is
+	# then applied on top of it instead of being undone by it.
+	_apply_side_view.call_deferred()
 
 
 func _process(_delta: float) -> void:
@@ -101,6 +108,21 @@ func _place_player(side: int, dir: Vector3) -> void:
 		(player as CharacterBody3D).velocity = Vector3.ZERO
 	if player.has_method("set_facing"):
 		player.call("set_facing", dir)
+
+
+## Switches the whole room into pure 2.5D movement: from here the player and every
+## NPC move only left and right, all held on the single `lane_z`. That is what
+## keeps the elder from drifting behind the table or a wall now that the room is
+## a side-on space rather than somewhere you can walk around in depth.
+func _apply_side_view() -> void:
+	var lane := lane_z
+	# Walk the room's own nodes rather than a group: npc.tscn is not in an "npc"
+	# group, so a group lookup silently found nobody and left the room's NPCs
+	# free to drift behind the furniture. Everything in the room that understands
+	# set_side_view - the player and each NPC - is switched on here.
+	for node in find_children("*", "Node3D", true, false):
+		if node.has_method("set_side_view"):
+			node.call("set_side_view", true, lane)
 
 
 ## Half the width, in metres, that the camera sees at the room's own depth.
