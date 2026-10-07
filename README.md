@@ -13,10 +13,12 @@ that must not be broken, and what is still missing.
 ## 1. Quick start
 
 - **Engine:** Godot 4.7, GDScript only.
-- **Entry scene:** `res://main.tscn` (set in `project.godot` as
-  `application/run/main_scene`). It is a two-node file: a `Node3D` root named
-  `Main` that instances `res://scenes/village.tscn`.
-- **Play:** press Play in the editor. `main.tscn` -> `Village` -> everything.
+- **Entry scene:** `res://ui/main_menu.tscn` (set in `project.godot` as
+  `application/run/main_scene`) - the start screen. New Game loads
+  `res://main.tscn`, the gameplay entry point: a `Node3D` root named `Main` that
+  instances `res://scenes/village.tscn` plus the in-game pause menu.
+- **Play:** press Play in the editor -> start screen -> New Game -> `Village`.
+  See section 16 for the menus and saving.
 - **Renderer:** Forward+, D3D12 on Windows, Jolt physics, MSAA 4x,
   physics interpolation ON (see section 12).
 
@@ -560,3 +562,38 @@ append the attribution lines to `res://LICENSES_SUMMER_ASSETS.md` if it exists.
   `res://scripts/quest_npc.gd` as canonical - those files were deleted during the
   3D restructure and do not exist. The live player controller is
   `res://entities/player/player_controller.gd`.
+
+---
+
+## 16. Menus and saving
+
+**Start screen** `res://ui/main_menu.tscn` (the main scene). Title "Skadoosh!"
+plus New Game / Load / Settings / Quit. New Game calls `SaveGame.new_game()`
+(which erases the previous run's lamp-post checkpoint so state never carries
+over) and then loads `res://main.tscn`. Load and Settings are pages inside the
+same scene; each raises `back_requested`, and Escape or the bottom-left Back
+button goes up one level.
+
+**Settings** `res://ui/settings_menu.tscn` is instanced by both the start screen
+and the pause menu. It lists Gameplay / Audio / Video / Input; the category pages
+are placeholders except Input, which opens the `SettingsScreen` overlay - the
+rebind list driven by the `InputRemap` autoload.
+
+**In-game menu** `res://ui/pause_menu.tscn`, instanced by `res://main.tscn` so it
+only exists while playing. From the top: "Save & Quit", then "Settings". It opens
+and closes on `ui_cancel` (Escape) and on the `settings` action (Tab / gamepad
+START). One press opens it and it STAYS open: a release lock ignores the actions
+until every bound key is physically up, so a held key cannot flicker it shut.
+Opening pauses the tree and closing restores the previous paused state.
+
+**Saving** `res://scripts/save_game.gd` (autoload `SaveGame`) owns slots in
+`user://saves/<id>.cfg`. `new_game()` starts a fresh slot, `set_checkpoint(id,
+pos)` records the lamp post (called by the checkpoint manager and each lamp post),
+and `save_active()` (Save & Quit) stamps the slot's time. `list_saves(n)` returns
+the newest first as `{id, name, date}` with the date formatted
+`YYYY/MM/DD HH:MM:SS` in local time; the name is the placeholder "Unnamed" until
+a naming screen exists. `load_slot(id)` writes the point back into
+`user://checkpoint.cfg`, which the village's checkpoint manager already restores -
+so the loaded lamp lights and the player respawns there. The manager also places
+the player at that point on scene entry (deferred one frame, via
+`consume_pending_spawn()`), so Load starts you at your last lamp post.

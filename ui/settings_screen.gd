@@ -1,6 +1,11 @@
 extends CanvasLayer
-## Modal input-bindings overlay, opened and closed by the "settings" action
-## (keyboard Tab / joypad Start).
+## Modal input-bindings overlay: the content behind Settings -> Input, reached
+## from the start screen and from the in-game pause menu.
+##
+## It is a passive overlay. Nothing opens it by itself any more - the menu that
+## owns the Input category calls open(), and closes it with close(), its Close
+## button or Escape. Escape is consumed here so closing the overlay never also
+## steps the menu underneath up a level.
 ##
 ## It lists every rebindable action, shows the current binding for each, and lets
 ## the player click a row and then press a key, mouse button or joypad button to
@@ -16,6 +21,9 @@ extends CanvasLayer
 ## paused, so no pausable gameplay node polls Input or receives input events.
 ## The overlay itself keeps running because it is PROCESS_MODE_ALWAYS, and it
 ## consumes the events it handles so they cannot reach anything else.
+
+## Raised by close(), so the menu that opened the overlay can take focus back.
+signal closed
 
 const IDLE_PROMPT := "Click a binding, then press the input you want to use."
 const REBIND_PROMPT := "Press a key, mouse button or joypad button for this action. Esc cancels."
@@ -49,20 +57,20 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if visible and _listening_action != "":
-		# Rebinding wins over the toggle, so the player can bind an action to
-		# Tab (the settings key) without the overlay closing on them.
+	# The overlay no longer toggles itself on the "settings" action (Tab / gamepad
+	# START): that key now belongs to the in-game menu, which opens and closes this
+	# overlay through open() / close().
+	if not visible:
+		return
+	if _listening_action != "":
+		# While listening for a rebind, swallow everything so the pressed input
+		# lands on the row being edited and nowhere else.
 		_capture(event)
 		get_viewport().set_input_as_handled()
 		return
-	if event.is_action_pressed("settings"):
-		if visible:
-			close()
-		else:
-			open()
-		get_viewport().set_input_as_handled()
-		return
-	if visible and event.is_action_pressed("ui_cancel"):
+	if event.is_action_pressed("ui_cancel"):
+		# Escape closes the overlay only. The event is consumed here, so the menu
+		# underneath does not also treat it as "go up one level".
 		close()
 		get_viewport().set_input_as_handled()
 
@@ -80,11 +88,15 @@ func open() -> void:
 
 
 func close() -> void:
+	if not visible:
+		return
 	_listening_action = ""
 	visible = false
 	_refresh_all_rows()
 	_set_prompt(IDLE_PROMPT)
+	_close_button.release_focus()
 	get_tree().paused = _resume_paused
+	closed.emit()
 
 
 func _capture(event: InputEvent) -> void:

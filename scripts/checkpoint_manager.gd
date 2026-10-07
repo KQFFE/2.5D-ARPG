@@ -35,6 +35,41 @@ func _ready() -> void:
 	# exactly as it would if the player had just walked into it.
 	if _has_checkpoint:
 		checkpoint_activated.emit(_id)
+		_mirror_to_save_slot()
+	_place_player_at_loaded_spawn()
+
+
+## A loaded save drops the player where they last saved. The player is placed one
+## frame in, after every node's _ready has run, so the move sticks instead of
+## being overwritten by the village's spawn position.
+func _place_player_at_loaded_spawn() -> void:
+	var save := get_tree().root.get_node_or_null(^"SaveGame")
+	if save == null or not save.has_method("consume_pending_spawn"):
+		return
+	var spawn: Variant = save.call("consume_pending_spawn")
+	if spawn == null:
+		return
+	_place_player.call_deferred(spawn as Vector3)
+
+
+func _place_player(spawn: Vector3) -> void:
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	if player == null:
+		return
+	player.global_position = spawn
+	if player is CharacterBody3D:
+		(player as CharacterBody3D).velocity = Vector3.ZERO
+
+
+## Keeps the active save slot's checkpoint in step with the village checkpoint,
+## so loading that save later wakes the player at the same lamp post. Does
+## nothing when no save is active (for example a brand new game).
+func _mirror_to_save_slot() -> void:
+	if not _has_checkpoint:
+		return
+	var save := get_tree().root.get_node_or_null(^"SaveGame")
+	if save != null and save.has_method("set_checkpoint"):
+		save.call("set_checkpoint", _id, _position)
 
 
 ## Called by a checkpoint post when the player walks into it. Records the point
@@ -45,6 +80,7 @@ func activate(id: String, position: Vector3) -> void:
 	_has_checkpoint = true
 	_save()
 	checkpoint_activated.emit(_id)
+	_mirror_to_save_slot()
 	print("Checkpoint saved: '%s' at %s" % [_id, str(_position)])
 
 

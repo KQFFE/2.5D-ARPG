@@ -1,7 +1,11 @@
-[gd_scene format=3 uid="uid://ompkjpnmhrev"]
+[gd_scene load_steps=3 format=3 uid="uid://ompkjpnmhrev"]
 
 [ext_resource type="PackedScene" uid="uid://dq76cy2hu0gmm" path="res://scenes/village.tscn" id="1_village"]
+[ext_resource type="PackedScene" path="res://ui/pause_menu.tscn" id="2_pause_menu"]
 
 [node name="Main" type="Node3D" unique_id=1169127206]
 
 [node name="Village" parent="." unique_id=810276835 instance=ExtResource("1_village")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("2_pause_menu")]
+visible = false

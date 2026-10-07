@@ -78,6 +78,11 @@ func _on_body_entered(body: Node3D) -> void:
 		return
 	if manager.has_method("activate"):
 		manager.activate(checkpoint_id, global_position + respawn_offset)
+	# Mirror into the active save slot, so a save that was loaded keeps up with
+	# the lamp post the player has just reached (saved together on Save & Quit).
+	var save := get_tree().root.get_node_or_null(^"SaveGame")
+	if save != null and save.has_method("set_checkpoint"):
+		save.call("set_checkpoint", checkpoint_id, global_position + respawn_offset)
 
 
 ## Where this post would put the player back, without activating it.

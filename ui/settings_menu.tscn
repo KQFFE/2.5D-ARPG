@@ -1,0 +1,106 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://ui/settings_menu.gd" id="1_settings_menu"]
+[ext_resource type="StyleBoxFlat" path="res://ui/menu_style.tres" id="2_panel_style"]
+[ext_resource type="PackedScene" path="res://ui/settings_category.tscn" id="3_category"]
+
+[node name="SettingsMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_settings_menu")
+
+[node name="ListPage" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="ListPage"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 40.0
+offset_bottom = 112.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.96, 0.87, 0.62, 1)
+theme_override_font_sizes/font_size = 28
+text = "Settings"
+horizontal_alignment = 1
+
+[node name="Center" type="CenterContainer" parent="ListPage"]
+layout_mode = 1
+anchor_top = 0.18
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="ListPage/Center"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2_panel_style")
+
+[node name="Content" type="VBoxContainer" parent="ListPage/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="GameplayButton" type="Button" parent="ListPage/Center/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Gameplay"
+focus_neighbor_top = NodePath("../InputButton")
+focus_neighbor_bottom = NodePath("../AudioButton")
+
+[node name="AudioButton" type="Button" parent="ListPage/Center/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Audio"
+focus_neighbor_top = NodePath("../GameplayButton")
+focus_neighbor_bottom = NodePath("../VideoButton")
+
+[node name="VideoButton" type="Button" parent="ListPage/Center/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Video"
+focus_neighbor_top = NodePath("../AudioButton")
+focus_neighbor_bottom = NodePath("../InputButton")
+
+[node name="InputButton" type="Button" parent="ListPage/Center/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Input"
+focus_neighbor_top = NodePath("../VideoButton")
+focus_neighbor_bottom = NodePath("../../../../BackButton")
+
+[node name="BackButton" type="Button" parent="ListPage"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 56)
+layout_mode = 1
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = -84.0
+offset_right = 228.0
+offset_bottom = -28.0
+grow_horizontal = 1
+theme_override_font_sizes/font_size = 18
+text = "Back"
+focus_neighbor_top = NodePath("../Center/Panel/Content/InputButton")
+
+[node name="CategoryPage" parent="." instance=ExtResource("3_category")]
+unique_name_in_owner = true
+visible = false

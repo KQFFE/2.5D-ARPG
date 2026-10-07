@@ -1,0 +1,79 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://ui/pause_menu.gd" id="1_pause_menu"]
+[ext_resource type="StyleBoxFlat" path="res://ui/menu_style.tres" id="2_panel_style"]
+[ext_resource type="PackedScene" path="res://ui/settings_menu.tscn" id="3_settings_page"]
+
+[node name="PauseMenu" type="CanvasLayer"]
+process_mode = 3
+layer = 5
+visible = false
+script = ExtResource("1_pause_menu")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="MainPage" type="Control" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="MainPage"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 40.0
+offset_bottom = 116.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.96, 0.87, 0.62, 1)
+theme_override_font_sizes/font_size = 44
+text = "Paused"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Center" type="CenterContainer" parent="MainPage"]
+layout_mode = 1
+anchor_top = 0.18
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="MainPage/Center"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2_panel_style")
+
+[node name="Content" type="VBoxContainer" parent="MainPage/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SaveQuitButton" type="Button" parent="MainPage/Center/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Save & Quit"
+focus_neighbor_top = NodePath("../SettingsButton")
+focus_neighbor_bottom = NodePath("../SettingsButton")
+
+[node name="SettingsButton" type="Button" parent="MainPage/Center/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Settings"
+focus_neighbor_top = NodePath("../SaveQuitButton")
+focus_neighbor_bottom = NodePath("../SaveQuitButton")
+
+[node name="SettingsPage" parent="." instance=ExtResource("3_settings_page")]
+unique_name_in_owner = true
+visible = false
