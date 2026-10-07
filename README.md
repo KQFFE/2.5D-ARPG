@@ -811,8 +811,13 @@ append the attribution lines to `res://LICENSES_SUMMER_ASSETS.md` if it exists.
   editor's bind operation only appends and there is no remove; a raw text edit to
   `[input]` is blocked by an engine guard. `InputRemap._sanitize_defaults()` strips
   them at runtime so they do not cause double input, and the settings screen reads
-  the cleaned live bindings. To clean the file itself, remove the repeated rows in
-  the editor's Input Map panel.
+  the cleaned live bindings. Space in particular is on BOTH `jump` and `interact`
+  in the file; `_sanitize_defaults()` calls `_strip_key_from_action("interact",
+  KEY_SPACE)` so `interact` is E only whatever the file or the order of `ACTIONS`
+  says. Verified at runtime: `jump = Space / Joypad A`, `interact = E`,
+  `move_up = W / Up / Joypad axis 1 -` - the duplicated W, Up, E and Space rows
+  are all collapsed. To clean the file itself, remove the repeated rows in the
+  editor's Input Map panel.
 
 ---
 

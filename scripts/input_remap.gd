@@ -199,6 +199,25 @@ func _sanitize_defaults() -> void:
 				continue
 			kept.append(event)
 			claimed.append(event)
+	# The project rule, enforced outright instead of left to the order of ACTIONS
+	# above: Space is JUMP and must never double as interact, or jumping next to a
+	# villager would start a dialogue. Pass 2 only happens to get this right
+	# because `jump` is listed before `interact`; this does not depend on that.
+	_strip_key_from_action("interact", KEY_SPACE)
+
+
+## Removes every event bound to `keycode` from `action`, so a fixed rule holds
+## whatever else the bindings happen to look like.
+func _strip_key_from_action(action: String, keycode: Key) -> void:
+	if not InputMap.has_action(action):
+		return
+	for event in InputMap.action_get_events(action):
+		if not (event is InputEventKey):
+			continue
+		var key := event as InputEventKey
+		var code: Key = key.physical_keycode if key.physical_keycode != KEY_NONE else key.keycode
+		if code == keycode:
+			InputMap.action_erase_event(action, event)
 
 
 ## True when `event` is already represented in `pool`.
