@@ -3,12 +3,12 @@ extends Area3D
 ## house, or the doorway on the inside of that house. One script drives both
 ## directions; only the exported values differ.
 ##
-## WHICH WAY THE PLAYER LEAVES COMES FROM THE DIRECTION THEY ARE MOVING when they
-## touch the trigger - never from where the trigger sits in the scene. That
-## direction travels with them to the scene being entered, which arranges itself
-## around it: the interior puts its door on the wall the player came in through,
-## so walking on carries them deeper into the house and turning back takes them
-## out again the way they came.
+## WHICH WAY THE PLAYER LEAVES COMES FROM THE DIRECTION THEY ARE MOVING OR
+## FACING when they touch the trigger - never from where the trigger sits in the
+## scene. That direction travels with them to the scene being entered, which
+## arranges itself around it: the interior puts its door on the wall the player
+## came in through, so walking on carries them deeper into the house and turning
+## back takes them out again the way they came.
 ##
 ## leads_inside separates the two jobs:
 ##   true  - the outside door of a building. It fires as soon as the player
@@ -20,6 +20,13 @@ extends Area3D
 ##           on the way deeper in does not throw them back outside. It needs no
 ##           run-up and no distance past the trigger, because the room's own wall
 ##           is what the player is walking into.
+##
+## The inside test runs every frame for as long as the player overlaps, not only
+## on body_entered. Two reasons: the player is placed about a metre inside the
+## door, which can already overlap this trigger the moment the room loads, and
+## walking into the wall cancels their velocity. An entry-only test would
+## therefore either fire while they were still standing at the spawn or never
+## fire at all once they reached the doorway.
 ##
 ## An arriving player is placed `exit_clearance` beyond the remembered outside
 ## doorway - and, when they left sideways, `lateral_clearance` to the opposite
@@ -46,24 +53,50 @@ extends Area3D
 ## Ground height for an arrival, so a doorway whose trigger sits at door height
 ## still puts the player on the floor.
 const GROUND_Y := 0.05
+## Speed above which the player counts as walking rather than standing, m/s.
+const MOVING_EPSILON_SQ := 0.01
 
 var _fired := false
+## Player bodies currently overlapping the trigger.
+var _bodies: Array[Node3D] = []
+## True once the player has actually walked while overlapping. Stops the exit
+## from firing the instant a freshly spawned player merely FACES outwards: at the
+## spawn the facing is whatever the player scene starts on, and on a doorway
+## whose outward matches it that would have thrown them straight back outside.
+var _has_moved := false
 
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
 
 
 func _on_body_entered(body: Node3D) -> void:
-	if _fired or body == null or not body.is_in_group("player"):
+	if body == null or not body.is_in_group("player"):
 		return
-	var dir := _travel_dir(body)
-	if not leads_inside and not _heading_out(dir):
-		return
-	_leave(dir)
+	if not _bodies.has(body):
+		_bodies.append(body)
+	_try_leave(body)
 
 
-## True when the player's movement is roughly along the way out of the room.
+func _on_body_exited(body: Node3D) -> void:
+	_bodies.erase(body)
+
+
+func _physics_process(_delta: float) -> void:
+	if _fired or _bodies.is_empty():
+		return
+	for body in _bodies:
+		if not is_instance_valid(body):
+			continue
+		if _speed_squared(body) > MOVING_EPSILON_SQ:
+			_has_moved = true
+		if _try_leave(body):
+			return
+
+
+## True when the player's movement - or, once they are walking into the wall,
+## the way they are facing - is roughly along the way out of the room.
 func _heading_out(dir: Vector3) -> bool:
 	var out := Vector3(outward.x, 0.0, outward.z)
 	if out.length_squared() < 0.0001:
@@ -71,8 +104,10 @@ func _heading_out(dir: Vector3) -> bool:
 	return dir.dot(out.normalized()) >= outward_tolerance
 
 
-## The direction the player is actually moving: that is what says which side of
-## the doorway they used. Falls back to the way they face when standing still.
+## The direction the player is actually going: their velocity, and when the wall
+## has already cancelled that, the way they are facing. Facing is what the player
+## controller turns from the input, so it still points out of the room while they
+## hold the key against the wall.
 func _travel_dir(body: Node3D) -> Vector3:
 	var dir := Vector3.ZERO
 	if body is CharacterBody3D:
@@ -87,6 +122,29 @@ func _travel_dir(body: Node3D) -> Vector3:
 	if dir.length_squared() < 0.0004:
 		return Vector3(0.0, 0.0, -1.0)
 	return dir.normalized()
+
+
+func _speed_squared(body: Node3D) -> float:
+	if body is CharacterBody3D:
+		var velocity: Vector3 = (body as CharacterBody3D).velocity
+		velocity.y = 0.0
+		return velocity.length_squared()
+	return 0.0
+
+
+## Decides whether this body leaves through the doorway now. Returns true once
+## the trip has been started.
+func _try_leave(body: Node3D) -> bool:
+	if _fired:
+		return true
+	var dir := _travel_dir(body)
+	if not leads_inside:
+		# An inside doorway waits until the player is both heading out AND has
+		# taken at least one step, so a fresh spawn cannot fire it by facing.
+		if not _has_moved or not _heading_out(dir):
+			return false
+	_leave(dir)
+	return true
 
 
 func _leave(dir: Vector3) -> void:

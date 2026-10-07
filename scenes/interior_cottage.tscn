@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3]
+[gd_scene load_steps=27 format=3]
 
 [ext_resource type="PackedScene" uid="uid://be1gfrx0jghvn" path="res://entities/player/player.tscn" id="1_player"]
 [ext_resource type="Material" path="res://materials/wood.tres" id="2_wood"]
@@ -70,6 +70,12 @@ size = Vector3(0.9, 0.6, 0.55)
 [sub_resource type="BoxShape3D" id="BoxShape3D_exit"]
 size = Vector3(2.4, 2.4, 1.6)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_back"]
+size = Vector3(13.2, 6, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_side"]
+size = Vector3(0.3, 6, 8)
+
 [node name="InteriorCottage" type="Node3D"]
 script = ExtResource("6_interior")
 
@@ -101,20 +107,44 @@ mesh = SubResource("BoxMesh_floor")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0)
 shape = SubResource("BoxShape3D_floor")
 
-[node name="BackWall" type="MeshInstance3D" parent="Room"]
+[node name="BackWall" type="StaticBody3D" parent="Room"]
+
+[node name="Mesh" type="MeshInstance3D" parent="Room/BackWall"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -3)
 material_override = ExtResource("3_wall")
 mesh = SubResource("BoxMesh_back")
 
-[node name="SideWallLeft" type="MeshInstance3D" parent="Room"]
+[node name="Collision" type="CollisionShape3D" parent="Room/BackWall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -3)
+shape = SubResource("BoxShape3D_wall_back")
+
+[node name="SideWallLeft" type="StaticBody3D" parent="Room"]
+
+[node name="Mesh" type="MeshInstance3D" parent="Room/SideWallLeft"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 3, 0)
 material_override = ExtResource("3_wall")
 mesh = SubResource("BoxMesh_side")
 
-[node name="SideWallRight" type="MeshInstance3D" parent="Room"]
+[node name="Collision" type="CollisionShape3D" parent="Room/SideWallLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 3, 0)
+shape = SubResource("BoxShape3D_wall_side")
+
+[node name="SideWallRight" type="StaticBody3D" parent="Room"]
+
+[node name="Mesh" type="MeshInstance3D" parent="Room/SideWallRight"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3, 0)
 material_override = ExtResource("3_wall")
 mesh = SubResource("BoxMesh_side")
+
+[node name="Collision" type="CollisionShape3D" parent="Room/SideWallRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3, 0)
+shape = SubResource("BoxShape3D_wall_side")
+
+[node name="FrontBarrier" type="StaticBody3D" parent="Room"]
+
+[node name="Collision" type="CollisionShape3D" parent="Room/FrontBarrier"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 4)
+shape = SubResource("BoxShape3D_wall_back")
 
 [node name="Ceiling" type="MeshInstance3D" parent="Room"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.15, 0)

@@ -361,6 +361,15 @@ project's first switch from the 3D village to that 2.5D mode.
   X to keep the player framed, clamped so it never looks past a side wall. An
   arriving player is placed `entry_inset` inside the door rather than against it,
   so they are on screen immediately instead of at the very edge of the frame.
+- **The room shell is solid.** `Floor`, `BackWall`, `SideWallLeft` and
+  `SideWallRight` are each a `StaticBody3D` with a `MeshInstance3D` and a matching
+  `CollisionShape3D` child, so the player is stopped by every wall and can only
+  leave through the doorway. An invisible `FrontBarrier` `StaticBody3D` - a
+  `CollisionShape3D` with no mesh, so it cannot be seen against the camera - closes
+  the open fourth side that the camera looks through, so the room cannot be walked
+  out of that way either. Each wall keeps its mesh and its collider as separate
+  children rather than one node, because a `MeshInstance3D` carries no collision of
+  its own.
 - **The doorway** is `res://scripts/door_trigger.gd`, an `Area3D` with a
   `target_scene` and a `leads_inside` flag that says which of its two jobs it does.
   - `leads_inside = true` (the cottage's `DoorTrigger`) fires as soon as the player
@@ -370,6 +379,14 @@ project's first switch from the 3D village to that 2.5D mode.
     is HEADING OUT, moving along its `outward`. Touching the doorway from the deep
     side does nothing, so brushing past it is not mistaken for leaving. It needs no
     run-up: the room's own wall is what the player walks into.
+  - The inside test runs **every frame while the player overlaps**, not only on
+    `body_entered`, and it accepts the way the player is FACING when the wall has
+    already cancelled their velocity. Both matter now that the walls are solid: the
+    player is placed about a metre inside the door, which can already overlap the
+    trigger the moment the room loads, so an entry-only test would fire while they
+    were still standing at the spawn - and once they walked into the wall their
+    velocity would be zero and it would never fire at all. A `_has_moved` guard
+    keeps a fresh spawn from firing the exit merely by facing outwards.
 - **Which wall the interior door sits on comes from the way the player came in**,
   not from the room's own layout. `interior_cottage.gd` reads the travel direction
   out of the payload and moves `ExitDoor`, `ExitDoorHole` and `DoorLight` onto that
