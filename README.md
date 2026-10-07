@@ -324,7 +324,7 @@ freed. Exports `herb_meta` and `spin_speed`.
 
 | Scene | What it is | Notes |
 |---|---|---|
-| `cottage.tscn` | one cottage | StaticBody3D + walls/roof/door/two windows/chimney + a box collider. Instanced 5x. Uses the shared fade materials. |
+| `cottage.tscn` | one cottage | StaticBody3D + walls/roof/black doorhole/two windows/chimney + a box collider, plus a `DoorTrigger` in the doorway. Instanced 5x. Uses the shared fade materials. |
 | `fence.tscn` | one 5 m fence run | three posts, two rails, box collider. Instanced ~38x for the boundary. Uses `wood_opaque.tres`. |
 | `gate.tscn` | the village gate | wooden gate spanning the lane at world z=-26, the north edge. Uses the fade materials. |
 | `pen.tscn` | the sheep pen | a 10x10 enclosure built from fence instances, with an opening. |
@@ -333,6 +333,37 @@ freed. Exports `herb_meta` and `spin_speed`.
 > Fence and pen deliberately use `res://materials/wood_opaque.tres`, NOT the fade
 > shader: they are only 1.15 m tall, shorter than the player, so they must never
 > go transparent.
+
+### Interiors and doorways
+
+The vision's side-view segments: inside a building the view flattens to a side-on
+read and the room is walked left-to-right, like a platformer level. This is the
+project's first switch from the 3D village to that 2.5D mode.
+
+- `res://scenes/interior_cottage.tscn` is the first interior, reached through the
+  black doorhole of `Structures/Cottage1` (the north-west cottage). It is a 12x8 m
+  room - floor, back and side walls, ceiling, table, stool, shelf, chest and rug,
+  all primitives - lit by a warm hearth light and a cool one by the door.
+- `RoomCamera` is a `Camera3D` 18 m in front of the room at `fov 22` with a slight
+  downward pitch. That narrow field of view is what flattens the real 3D room into
+  a side-on view. `res://scripts/interior_cottage.gd` pans it along X to keep the
+  player framed and clamps the pan so it never looks past a side wall; a room
+  narrower than the view does not pan at all.
+- **The doorway** is `res://scripts/door_trigger.gd`, an `Area3D` with a
+  `target_scene` and a `target_spawn`. One script covers both directions: the
+  village cottage's `DoorTrigger` sends the player into the interior, and the
+  interior's `ExitDoor` sends them back out just south of that cottage door.
+- `res://scripts/scene_router.gd` (`class_name SceneRouter`) carries the arrival
+  position across the scene change as static state, so no autoload was needed and
+  `project.godot` is untouched. `res://scripts/entry_spawn.gd` is the plain `Node`
+  that consumes it, one frame later, so it wins over the scene's own default spawn.
+- The cottage's `DoorHole` uses the fade shader with a near-black albedo, so it
+  fades along with the rest of the cottage when the player walks behind it.
+
+> A door trigger sits IN the doorway, so a scene that returns the player must
+> place them clear of the trigger or they bounce straight back through it. The
+> village spawn is about a metre south of the cottage's trigger box, and the
+> interior spawn about a metre east of its exit box.
 
 ---
 

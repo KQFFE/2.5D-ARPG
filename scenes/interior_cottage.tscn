@@ -1,0 +1,174 @@
+[gd_scene format=3 uid="uid://8x3j3lmaeq3g"]
+
+[ext_resource type="PackedScene" uid="uid://be1gfrx0jghvn" path="res://entities/player/player.tscn" id="1_player"]
+[ext_resource type="Material" path="res://materials/wood.tres" id="2_wood"]
+[ext_resource type="Material" path="res://materials/wall.tres" id="3_wall"]
+[ext_resource type="Material" path="res://materials/beam.tres" id="4_beam"]
+[ext_resource type="Material" path="res://materials/stone.tres" id="5_stone"]
+[ext_resource type="Script" uid="uid://bwqd4uyvvkgwx" path="res://scripts/interior_cottage.gd" id="6_interior"]
+[ext_resource type="Script" uid="uid://e1bxg22axvyo" path="res://scripts/door_trigger.gd" id="7_door"]
+[ext_resource type="Script" uid="uid://bq43lk6ahohe0" path="res://scripts/entry_spawn.gd" id="8_entry"]
+
+[sub_resource type="Environment" id="Environment_interior"]
+background_mode = 1
+background_color = Color(0.05, 0.04, 0.06, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.55, 0.46, 0.4, 1)
+ambient_light_energy = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(12, 0.3, 8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(12, 0.3, 8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_back"]
+size = Vector3(12, 6, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_side"]
+size = Vector3(0.3, 6, 8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ceiling"]
+size = Vector3(12, 0.3, 8)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_doorway"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_doorway"]
+size = Vector3(0.12, 2.2, 1.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rug"]
+size = Vector3(3, 0.02, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_table"]
+size = Vector3(1.8, 0.8, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_table"]
+size = Vector3(1.8, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_stool"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_shelf"]
+size = Vector3(2.4, 0.12, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_chest"]
+size = Vector3(0.9, 0.6, 0.55)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_chest"]
+size = Vector3(0.9, 0.6, 0.55)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_exit"]
+size = Vector3(1.4, 2.2, 1.6)
+
+[node name="InteriorCottage" type="Node3D" unique_id=1186569109]
+script = ExtResource("6_interior")
+
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=766044571]
+environment = SubResource("Environment_interior")
+
+[node name="HearthLight" type="OmniLight3D" parent="." unique_id=1143913482]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 2.6, -1)
+light_color = Color(1, 0.72, 0.45, 1)
+light_energy = 3.2
+omni_range = 9.0
+
+[node name="DoorLight" type="OmniLight3D" parent="." unique_id=1720271523]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6, 2.6, 0.5)
+light_color = Color(0.8, 0.85, 1, 1)
+light_energy = 1.6
+omni_range = 7.0
+
+[node name="Room" type="Node3D" parent="." unique_id=1548901369]
+
+[node name="Floor" type="StaticBody3D" parent="Room" unique_id=730529413]
+
+[node name="Mesh" type="MeshInstance3D" parent="Room/Floor" unique_id=1461376821]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0)
+material_override = ExtResource("2_wood")
+mesh = SubResource("BoxMesh_floor")
+
+[node name="Collision" type="CollisionShape3D" parent="Room/Floor" unique_id=1155840936]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0)
+shape = SubResource("BoxShape3D_floor")
+
+[node name="BackWall" type="MeshInstance3D" parent="Room" unique_id=298676140]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -3)
+material_override = ExtResource("3_wall")
+mesh = SubResource("BoxMesh_back")
+
+[node name="SideWallLeft" type="MeshInstance3D" parent="Room" unique_id=49939012]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 3, 0)
+material_override = ExtResource("3_wall")
+mesh = SubResource("BoxMesh_side")
+
+[node name="SideWallRight" type="MeshInstance3D" parent="Room" unique_id=541488537]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3, 0)
+material_override = ExtResource("3_wall")
+mesh = SubResource("BoxMesh_side")
+
+[node name="Ceiling" type="MeshInstance3D" parent="Room" unique_id=1928321584]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.15, 0)
+material_override = ExtResource("4_beam")
+mesh = SubResource("BoxMesh_ceiling")
+
+[node name="ExitDoorHole" type="MeshInstance3D" parent="Room" unique_id=1133151495]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.9, 1.1, 0)
+material_override = SubResource("ShaderMaterial_doorway")
+mesh = SubResource("BoxMesh_doorway")
+
+[node name="Rug" type="MeshInstance3D" parent="Room" unique_id=18618743]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.01, -0.8)
+material_override = ExtResource("5_stone")
+mesh = SubResource("BoxMesh_rug")
+
+[node name="Table" type="StaticBody3D" parent="Room" unique_id=1845197097]
+
+[node name="Mesh" type="MeshInstance3D" parent="Room/Table" unique_id=1097431791]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.4, -1.2)
+material_override = ExtResource("2_wood")
+mesh = SubResource("BoxMesh_table")
+
+[node name="Collision" type="CollisionShape3D" parent="Room/Table" unique_id=1601802004]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.4, -1.2)
+shape = SubResource("BoxShape3D_table")
+
+[node name="Stool" type="MeshInstance3D" parent="Room" unique_id=1445751584]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.25, -0.6)
+material_override = ExtResource("2_wood")
+mesh = SubResource("BoxMesh_stool")
+
+[node name="Shelf" type="MeshInstance3D" parent="Room" unique_id=863243589]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6, 1.9, -2.5)
+material_override = ExtResource("2_wood")
+mesh = SubResource("BoxMesh_shelf")
+
+[node name="Chest" type="StaticBody3D" parent="Room" unique_id=55533095]
+
+[node name="Mesh" type="MeshInstance3D" parent="Room/Chest" unique_id=1691611671]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 0.3, -1.8)
+material_override = ExtResource("2_wood")
+mesh = SubResource("BoxMesh_chest")
+
+[node name="Collision" type="CollisionShape3D" parent="Room/Chest" unique_id=2143491297]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 0.3, -1.8)
+shape = SubResource("BoxShape3D_chest")
+
+[node name="Player" parent="." unique_id=301839948 instance=ExtResource("1_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0.05, 0)
+
+[node name="RoomCamera" type="Camera3D" parent="." unique_id=1225568346]
+transform = Transform3D(0.990268, 0, -0.139173, 0, 1, 0, 0.139173, 0, 0.990268, 0, 1.7, 18)
+current = true
+fov = 22.0
+
+[node name="ExitDoor" type="Area3D" parent="." unique_id=168011427]
+script = ExtResource("7_door")
+target_scene = "res://main.tscn"
+target_spawn = Vector3(-12, 0.05, -4.2)
+
+[node name="ExitShape" type="CollisionShape3D" parent="ExitDoor" unique_id=267213708]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4, 1.1, 0)
+shape = SubResource("BoxShape3D_exit")
+
+[node name="EntrySpawn" type="Node" parent="." unique_id=506926746]
+script = ExtResource("8_entry")
