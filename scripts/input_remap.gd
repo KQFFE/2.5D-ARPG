@@ -199,11 +199,29 @@ func _sanitize_defaults() -> void:
 				continue
 			kept.append(event)
 			claimed.append(event)
-	# The project rule, enforced outright instead of left to the order of ACTIONS
-	# above: Space is JUMP and must never double as interact, or jumping next to a
-	# villager would start a dialogue. Pass 2 only happens to get this right
-	# because `jump` is listed before `interact`; this does not depend on that.
+	# The fixed defaults for `interact`, enforced outright instead of left to the
+	# order of ACTIONS above: E on the keyboard and Y on the gamepad, and never
+	# Space. Space is JUMP, and Space doubling as interact meant jumping next to a
+	# villager started a dialogue. Pass 2 only happens to get the Space half right
+	# because `jump` is listed before `interact`; this does not depend on that, and
+	# it also puts the gamepad binding back if a future re-import loses it.
 	_strip_key_from_action("interact", KEY_SPACE)
+	_ensure_joy_button("interact", JOY_BUTTON_Y)
+
+
+## Makes sure `action` has the joypad `button` bound, adding it only when the
+## project defaults are missing it. Every other event is left untouched, so this
+## asserts a default without trampling a deliberate rebind.
+func _ensure_joy_button(action: String, button: JoyButton) -> void:
+	if not InputMap.has_action(action):
+		return
+	for event in InputMap.action_get_events(action):
+		if event is InputEventJoypadButton and (event as InputEventJoypadButton).button_index == button:
+			return
+	var pad := InputEventJoypadButton.new()
+	pad.button_index = button
+	pad.pressed = false
+	InputMap.action_add_event(action, pad)
 
 
 ## Removes every event bound to `keycode` from `action`, so a fixed rule holds
