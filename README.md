@@ -44,7 +44,7 @@ Every action is an InputMap action and every one of them is rebindable in-game.
 | `attack` | Left mouse | RB (button 10) | arc in facing direction |
 | `parry` | Right mouse | LB (button 9) | timing window, negates damage |
 | `interact` | E | - | talk to NPCs. **E only, never Space** |
-| `settings` | Tab | Start (button 6) | opens the rebind overlay |
+| `settings` | Tab | Start (button 6) | opens the in-game menu (section 16) |
 
 **Movement default is the left stick on a gamepad, never face buttons.** WASD must
 not be mirrored onto the D-pad or face buttons. This is deliberate and recorded in
@@ -59,7 +59,7 @@ double as interact, which made jumping next to an NPC start a conversation.
 
 ```
 res://
-  main.tscn                  entry point - instances the village, nothing else
+  main.tscn                  gameplay entry: the village + the in-game pause menu
   project.godot              main scene, autoloads, input map, physics, render
   README.md                  this file
   .summerrules               binding project rules
@@ -68,6 +68,8 @@ res://
   scenes/
 	village.tscn             THE world hub: ground, lane, fields, structures,
 							 dressing, actors, checkpoints, UI
+	interior_cottage.tscn    side-view interior behind Cottage3 (north-west)
+	interior_house.tscn      side-view interior behind Cottage5 (north-east)
 
   entities/
 	player/    player.tscn + player_controller.gd
@@ -84,15 +86,28 @@ res://
   scripts/                   shared logic and systems
 	dialogue_manager.gd      DialogueManager autoload
 	input_remap.gd           InputRemap autoload
+	save_game.gd             SaveGame autoload: save slots, listing, load
 	health.gd                Health (class_name) shared by player + enemies
 	follow_camera_3d.gd      camera rig
 	occluder_fader.gd        player-behind-building transparency driver
 	checkpoint.gd            per-lamp-post respawn marker
+	lamppost.gd              lit-lantern look (extends checkpoint.gd)
 	checkpoint_manager.gd    active respawn point + save file
+	door_trigger.gd          doorway Area3D - works both directions
+	scene_router.gd          SceneRouter: carries the door payload across scenes
+	entry_spawn.gd           places the arriving player (position + facing)
+	enterable_cottage.gd     per-instance `enterable` / `interior_scene`
+	interior_cottage.gd      side-view interior camera + chooses the door wall
 
   ui/
-	dialogue_box.tscn + dialogue_box.gd      typewriter dialogue
+	dialogue_box.tscn + dialogue_box.gd        typewriter dialogue
 	settings_screen.tscn + settings_screen.gd  rebind overlay (autoload)
+	main_menu.tscn + main_menu.gd              start screen (the main scene)
+	load_menu.tscn + load_menu.gd              Load: the newest save slots
+	settings_menu.tscn + settings_menu.gd      Gameplay/Audio/Video/Input + Back
+	settings_category.tscn + settings_category.gd  category page (placeholder)
+	pause_menu.tscn + pause_menu.gd            in-game menu (Save & Quit)
+	menu_style.tres                            shared panel StyleBox (tres)
 
   shaders/  occluder_fade.gdshader
   materials/ wall thatch beam window stone wood wood_opaque gate_beam iron (.tres)
@@ -114,7 +129,8 @@ res://
 |---|---|---|
 | `DialogueManager` | `res://scripts/dialogue_manager.gd` | line queue + signals |
 | `InputRemap` | `res://scripts/input_remap.gd` | binding store, save/load, de-dupe |
-| `SettingsScreen` | `res://ui/settings_screen.tscn` | rebind overlay, always reachable |
+| `SettingsScreen` | `res://ui/settings_screen.tscn` | rebind overlay behind Settings -> Input |
+| `SaveGame` | `res://scripts/save_game.gd` | save slots, listing, load (section 16) |
 
 ---
 
@@ -189,6 +205,11 @@ OldMan (7,-9); Mother (6,15); Child (7,14); Sheep inside the fenced pen at
   an open parry negates the hit and shoves the player back; otherwise the damage
   reaches the `Health` child.
 - `is_alive()`, `facing_dir()`, `has_herb()`.
+- `set_facing(dir)` - points the player along a world direction on the XZ plane,
+  using the same convention as `facing_dir()`, so the front marker ends up looking
+  that way. Called by `entry_spawn.gd` and `interior_cottage.gd` so a doorway keeps
+  the facing the player walked through with (see section 9). The next movement
+  input re-aims the player as usual.
 
 **Exported tunables**
 
@@ -410,7 +431,7 @@ project's first switch from the 3D village to that 2.5D mode.
 
 > A door trigger sits IN the doorway, so the arrival point has to be clear of the
 > trigger box or the player bounces straight back through it. The interior enters
-> the player 1.4 m inside its door, and the village arrival lands 1.2 m beyond the
+> the player 1.0 m inside its door, and the village arrival lands 1.2 m beyond the
 > cottage doorway - clear of a box that is only 1 m deep.
 
 ---
@@ -485,8 +506,9 @@ The single owner of bindings.
 - `rebind_action(action, event)` - replaces that action's events, removes the event
   from any other game action using it (newest binding wins), then saves.
 - `save_bindings()` / `load_bindings()` - ConfigFile at
-  `user://input_bindings.cfg`. Loading happens once in `_ready()`, before the
-  first scene runs.
+  `user://input_bindings.cfg`. `save_bindings()` still runs on every rebind, but
+  `load_bindings()` is no longer called at startup (see the first bullet), so the
+  file is written and simply not read back yet.
 - `binding_text(action)`, `event_to_text(event)`, `action_entries()` - used by the
   settings screen.
 - `_sanitize_defaults()` - runs BEFORE the saved bindings load, and drops
@@ -496,12 +518,65 @@ The single owner of bindings.
   afterwards.
 
 ### `settings_screen.tscn` + `settings_screen.gd` (autoload `SettingsScreen`)
-Modal rebind overlay toggled by the `settings` action. Lists all 11 actions,
-shows the live binding, and rebinds on click-then-press. While open it pauses the
-tree (it is `PROCESS_MODE_ALWAYS`) so gameplay gets no input, and it consumes the
-events it handles. `Esc` cancels a capture or closes. Rebinding wins over the
-toggle, so Tab itself can be rebound. It talks to the singleton by node path
-(`/root/InputRemap`) and calls it dynamically.
+The rebind overlay: the content behind Settings -> Input, reached from both the
+start screen and the in-game menu. It is a **passive** overlay now - it no longer
+toggles itself on the `settings` action, because that key belongs to the in-game
+menu; its owner calls `open()` and it closes on its own Close button or `Esc`
+(which it consumes, so closing the overlay never also steps the menu underneath
+up a level). It lists all 11 actions, shows the live binding, and rebinds on
+click-then-press; `Esc` during a capture cancels it. While open it pauses the tree
+(it is `PROCESS_MODE_ALWAYS`) so gameplay gets no input, and it consumes the
+events it handles. It talks to the singleton by node path (`/root/InputRemap`) and
+calls it dynamically, and raises a `closed` signal so the menu that opened it can
+take focus back.
+
+### `save_game.gd` (autoload `SaveGame`)
+Owns save slots, one file per playthrough in `user://saves/<id>.cfg`. See
+section 16 for the flow. API: `new_game()` (erases the previous run's lamp
+checkpoint and starts a fresh slot), `set_checkpoint(id, position)` (called by the
+checkpoint manager on every lamp activation), `save_active()` (Save & Quit -
+stamps the slot's time so it sorts to the top), `load_slot(id)` / `load_latest()`,
+`list_saves(max_count)` (newest first; entries are `{id, name, date}` with `date`
+already formatted `YYYY/MM/DD HH:MM:SS` in local time), `format_datetime(unix)`,
+`consume_pending_spawn()`, `has_active_slot()`. Loading writes the recorded point
+back into `user://checkpoint.cfg`, so the normal village respawn pipeline does the
+work instead of a second codepath.
+
+### `scene_router.gd` (`class SceneRouter`)
+The hand-off between scenes across a doorway, held as **static state** rather than
+an autoload, so `project.godot` stays untouched. `travel(scene_path, payload)`
+changes scene (deferred, because a doorway is entered from a physics callback) and
+carries a payload - `{"dir": Vector3}`, plus `{"spawn": Vector3}` when returning
+out of a building. `consume()` returns that payload once. `remember_door(pos,
+outward)` / `remembered_door()` remember the doorway a building was entered
+through, so the exit can put the player back on the street beside it.
+
+### `door_trigger.gd`
+The doorway `Area3D`, used in both directions - the cottage's `DoorTrigger` and
+each interior's `ExitDoor` are this one script with different exported values:
+`target_scene`, `leads_inside`, `outward`, `outward_tolerance`, `exit_clearance`,
+`lateral_clearance`. See the interiors-and-doorways section (section 9) for how
+`leads_inside` and the every-frame test work.
+
+### `entry_spawn.gd`
+A plain `Node` in the village that places the arriving player. It consumes
+`SceneRouter`'s payload one frame later (deferred, so it lands after the player's
+own `_ready` and after the checkpoint manager's placement) and applies both the
+position and the facing through the player's `set_facing()`. Does nothing on an
+ordinary start, when the payload carries no spawn.
+
+### `enterable_cottage.gd`
+On `res://structures/cottage.tscn` (root script). `enterable` and
+`interior_scene` are set PER INSTANCE in `village.tscn`. On `_ready` it swaps the
+brown `Door` for the black `DoorHole` on an enterable instance, and switches the
+`DoorTrigger.monitoring` OFF on a shut one, so a shut wall can never change scene.
+
+### `interior_cottage.gd`
+Shared by both interiors (`interior_house.tscn` overrides `room_half_width` and
+`wall_x`). Levels the `RoomCamera`, pans it along X with a clamp so it never looks
+past a side wall, reads the arrival direction out of the payload to choose which
+wall the door sits on, and places the player - position plus facing - just inside
+that door. Exports `room_half_width`, `wall_x`, `camera_distance`, `entry_inset`.
 
 ### `health.gd` (`class Health`)
 The one health implementation, shared by the player and every enemy. Add it as a
@@ -547,7 +622,11 @@ Makes a building become see-through when the player walks behind it.
   and the reveal dropped out.
 
 ### `shaders/occluder_fade.gdshader`
-Spatial shader with `blend_mix` and **`depth_draw_always`**. It carries the albedo
+Spatial shader with `blend_mix` and **`depth_draw_always`**. It is also reused
+outside the fade: the cottage `DoorHole` and each interior `ExitDoorHole` use it
+with a near-black albedo, because the fader only duplicates `ShaderMaterial`s - a
+plain `StandardMaterial3D` doorhole would stay opaque while the rest of the
+building went see-through. It carries the albedo
 / roughness / metallic / emission uniforms so it replaces the structures' original
 StandardMaterial3D, plus `fade_active`, `fade_screen_center`, `fade_screen_radius`,
 `fade_screen_aspect`, `fade_min_alpha`, `fade_softness`, `fade_depth_margin`,
@@ -603,8 +682,13 @@ append the attribution lines to `res://LICENSES_SUMMER_ASSETS.md` if it exists.
   `player_controller.gd` already drives an `AnimatedSprite3D` named
   `AnimatedSprite3D` with `walk_<dir>` / `idle_<dir>` clips if you add one, with
   no code changes.
-- **Only one interior** so far (the cottage behind Cottage1). The rest of the
-  side-scrolling segments the vision calls for do not exist yet.
+- **Two interiors, one room each.** `interior_cottage.tscn` (behind Cottage3) and
+  `interior_house.tscn` (behind Cottage5) are single rooms - no furniture
+  interaction, no treasure, no puzzles, and no vertical/platforming movement yet.
+  The rest of the side-scrolling segments the vision calls for do not exist.
+- **No character naming.** Save slots are labelled "Unnamed" until a naming screen
+  exists (section 16).
+- **Gameplay / Audio / Video settings are placeholders** - only Input does anything.
 - **Only one enemy type** and one quest loop.
 - **The `[input]` section of `project.godot` contains duplicated events.** The
   editor's bind operation only appends and there is no remove; a raw text edit to
@@ -642,6 +726,26 @@ append the attribution lines to `res://LICENSES_SUMMER_ASSETS.md` if it exists.
   `res://scripts/quest_npc.gd` as canonical - those files were deleted during the
   3D restructure and do not exist. The live player controller is
   `res://entities/player/player_controller.gd`.
+- **A `MeshInstance3D` carries NO collision.** The interior walls were plain
+  `MeshInstance3D` nodes, so the player ran straight through them while the
+  `StaticBody3D` floor and furniture stopped them. A wall needs to be a
+  `StaticBody3D` with a `MeshInstance3D` AND a `CollisionShape3D` child.
+- **A doorway read only in `body_entered` cannot work once the room is solid.**
+  Two effects pull opposite ways: the arriving player is placed close enough to
+  the door to overlap the trigger on load, and walking into the wall cancels their
+  velocity. So the exit would either fire while the player was still standing at
+  the spawn, or never fire at all. `door_trigger.gd` therefore re-tests every frame
+  while overlapping, falls back to the player's FACING when velocity is zero, and
+  gates an inside doorway behind a `_has_moved` flag.
+- **A camera yaw is not cosmetic at a narrow FOV.** `RoomCamera` was authored with
+  8 degrees of yaw; at 21 m back and `fov 22` that swings the view about 2.5 m
+  sideways - enough to push a side wall, and the doorway in it, clean off screen.
+  `interior_cottage.gd` levels the camera to `rotation = Vector3.ZERO` before
+  panning.
+- **A menu key must latch, or the menu flickers.** The pause menu first toggled on
+  every key event, so the press opened it and the repeat events shut it again - it
+  only stayed up while the key was held. It now ignores the toggle actions until
+  every bound key is physically released.
 
 ---
 
